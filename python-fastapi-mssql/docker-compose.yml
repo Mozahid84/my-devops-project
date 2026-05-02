@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mssql-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mssql-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - ANSIBLE_INVENTORY=../ansible-mssql-deploy/inventory/hosts.ini
+      - ANSIBLE_PLAYBOOK_DIR=../ansible-mssql-deploy/playbooks
+      - MSSQL_SA_PASSWORD=YourStr0ng!Passw0rd
+      - MSSQL_VERSION=2019
+      - MSSQL_EDITION=Developer
+      - VM1_IP=192.168.56.101
+      - VM2_IP=192.168.56.102
+    volumes:
+      - ./logs:/app/logs
+      - ./ansible-mssql-deploy:/app/../ansible-mssql-deploy
+      - ${HOME}/.ssh:/root/.ssh:ro
+    networks:
+      - mssql-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  mssql-network:
+    driver: bridge

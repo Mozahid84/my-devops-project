@@ -1,0 +1,16 @@
+---
+# AWX Project Configuration
+
+# Project Details
+name: mssql-deploy
+description: MSSQL Server Installation and Configuration via Ansible
+organization: Default
+scm_type: git
+scm_url: "https://gitlab.com/YOUR_USERNAME/ansible-mssql-deploy.git"
+scm_branch: main
+scm_clean: true
+scm_delete_on_update: false
+scm_update_on_launch: true
+scm_update_cache_timeout: 0
+credential: null
+local_path: _awx_ansible_mssql_deploy

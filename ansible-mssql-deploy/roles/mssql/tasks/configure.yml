@@ -1,0 +1,68 @@
+---
+# Configure MSSQL Server directories and settings
+
+- name: Create backup directory
+  file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  tags:
+    - configure
+    - directories
+
+- name: Create data directory
+  file:
+    path: "{{ data_dir }}"
+    state: directory
+    mode: '0755'
+  tags:
+    - configure
+    - directories
+
+- name: Create log directory
+  file:
+    path: "{{ log_dir }}"
+    state: directory
+    mode: '0755'
+  tags:
+    - configure
+    - directories
+
+- name: Set MSSQL default data directory path
+  shell: |
+    /opt/mssql/bin/mssql-conf set filelocation.defaultdatadir {{ data_dir }}
+  notify: restart mssql service
+  tags:
+    - configure
+    - paths
+
+- name: Set MSSQL default log directory path
+  shell: |
+    /opt/mssql/bin/mssql-conf set filelocation.defaultlogdir {{ log_dir }}
+  notify: restart mssql service
+  tags:
+    - configure
+    - paths
+
+- name: Set MSSQL network port
+  shell: |
+    /opt/mssql/bin/mssql-conf set network.tcpport {{ mssql_port }}
+  notify: restart mssql service
+  tags:
+    - configure
+    - network
+
+- name: Enable SQL Server Agent
+  shell: |
+    /opt/mssql/bin/mssql-conf set sqlagent.enabled true
+  notify: restart mssql service
+  tags:
+    - configure
+    - agent
+
+- name: Flush handlers to apply configuration changes
+  meta: flush_handlers
+  tags:
+    - configure

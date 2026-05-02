@@ -1,0 +1,109 @@
+---
+# Copy backup from VM1 to VM2 and restore
+
+- name: Fetch backup files from VM1
+  fetch:
+    src: "{{ backup_dir }}/striped/"
+    dest: "./backups/vm1_striped/"
+    flat: no
+  when: inventory_hostname == "vm1"
+  tags:
+    - restore
+    - transfer
+    - vm1-only
+
+- name: Create backup directory on VM2
+  file:
+    path: "{{ backup_dir }}/striped"
+    state: directory
+    mode: '0755'
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - transfer
+    - vm2-only
+
+- name: Copy backup files to VM2
+  copy:
+    src: "./backups/vm1_striped/vm1/{{ backup_dir }}/striped/"
+    dest: "{{ backup_dir }}/striped/"
+    mode: '0644'
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - transfer
+    - vm2-only
+
+- name: Verify backup files on VM2
+  find:
+    path: "{{ backup_dir }}/striped"
+    patterns: "adv_stripe_*.bak"
+  register: backup_files_vm2
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - verify
+    - vm2-only
+
+- name: Display backup files on VM2
+  debug:
+    msg: "Backup files found on VM2: {{ backup_files_vm2.matched }}"
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - verify
+    - vm2-only
+
+- name: Restore 10-striped backup on VM2
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" << 'EOF'
+    RESTORE DATABASE AdventureWorks
+    FROM
+      DISK='{{ backup_dir }}/striped/adv_stripe_01.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_02.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_03.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_04.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_05.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_06.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_07.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_08.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_09.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_10.bak'
+    WITH REPLACE
+    EOF
+  when: inventory_hostname == "vm2"
+  register: restore_result
+  failed_when: false
+  changed_when: "'restored' in restore_result.stdout or 'Processed' in restore_result.stdout"
+  tags:
+    - restore
+    - vm2-only
+
+- name: Display restore result on VM2
+  debug:
+    msg: "Restore output: {{ restore_result.stdout }}"
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - verify
+    - vm2-only
+
+- name: Verify database on VM2
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT DB_ID('AdventureWorks') AS DBExists"
+  when: inventory_hostname == "vm2"
+  register: db_verify_vm2
+  changed_when: false
+  tags:
+    - restore
+    - verify
+    - vm2-only
+
+- name: Display database verification on VM2
+  debug:
+    msg: "AdventureWorks database verification on VM2: {{ db_verify_vm2.stdout }}"
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - verify
+    - vm2-only

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 Architecture Diagrams - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        .diagram-container {
+            background: radial-gradient(circle at top left, rgba(96,165,250,0.15), transparent 30%), linear-gradient(180deg, #111827, #0b1220);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 28px;
+            margin: 30px 0;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+            overflow: hidden;
+        }
+        
+        .diagram-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .diagram-description {
+            font-size: 14px;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            background-color: #0f172a;
+            border-left: 4px solid #60a5fa;
+            border-radius: 10px;
+            box-shadow: inset 0 0 0 1px rgba(148,163,184,0.08);
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15,23,42,0.92);
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.12);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+        }
+
+        .mermaid svg {
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">📊 10 Architecture Diagrams</div>
+                <div class="header-subtitle">Complete system visualization</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="index.html">Architecture</a>
+                <a href="diagrams.html">Diagrams</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>📊 Jump to Diagram</h3>
+            <ul>
+                <li><a href="#diagram1">1. Overall System</a></li>
+                <li><a href="#diagram2">2. Ansible Architecture</a></li>
+                <li><a href="#diagram3">3. FastAPI Service</a></li>
+                <li><a href="#diagram4">4. Backup/Restore</a></li>
+                <li><a href="#diagram5">5. Request Flow</a></li>
+                <li><a href="#diagram6">6. Task Execution</a></li>
+                <li><a href="#diagram7">7. Health Check</a></li>
+                <li><a href="#diagram8">8. Configuration</a></li>
+                <li><a href="#diagram9">9. Error Handling</a></li>
+                <li><a href="#diagram10">10. VM Connectivity</a></li>
+            </ul>
+
+            <h3>📖 Other</h3>
+            <ul>
+                <li><a href="index.html">Architecture Overview</a></li>
+                <li><a href="../index.html">Home</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>📊 All 10 Architecture Diagrams</h1>
+
+                <div class="alert info">
+                    <strong>💡 Tip:</strong> Use the sidebar to jump to any diagram. Scroll down to see all 10 diagrams below.
+                </div>
+
+                <!-- DIAGRAM 1 -->
+                <div class="diagram-container" id="diagram1">
+                    <div class="diagram-title">1. Overall System Architecture</div>
+                    <div class="diagram-description">
+                        Shows how all components of the MSSQL deployment system work together: 
+                        developer workflow, orchestration layer, network infrastructure, and target applications.
+                    </div>
+                    <div class="mermaid">
+graph TB
+    subgraph DevOps["DevOps Workflow"]
+        Dev["👤 Developer"]
+        Git["📦 GitLab Repo"]
+        CICD["🔄 GitLab CI/CD"]
+    end
+    
+    subgraph Orchestration["Orchestration Layer"]
+        AWX["🎛️ AWX Instance"]
+        FastAPI["⚡ FastAPI Service"]
+    end
+    
+    subgraph Network["Network & VMs"]
+        Net["📡 Network"]
+        VM1["🖥️ VM1 CentOS 8<br/>Primary"]
+        VM2["🖥️ VM2 CentOS 8<br/>Secondary"]
+    end
+    
+    subgraph Apps["Applications"]
+        MSSQL1["🗄️ MSSQL 2019<br/>Instance 1"]
+        MSSQL2["🗄️ MSSQL 2019<br/>Instance 2"]
+        DB1["📊 AdventureWorks"]
+        DB2["📊 AdventureWorks"]
+    end
+    
+    Dev -->|push| Git
+    Git -->|trigger| CICD
+    CICD -->|provision| AWX
+    CICD -->|provision| FastAPI
+    
+    AWX -->|ansible-playbook| Net
+    FastAPI -->|ansible-runner| Net
+    
+    Net -->|target| VM1
+    Net -->|target| VM2
+    
+    VM1 --> MSSQL1
+    VM2 --> MSSQL2
+    
+    MSSQL1 --> DB1
+    MSSQL2 --> DB2
+    
+    VM1 -->|backup 10x| Backup["💾 Backup Storage"]
+    Backup -->|restore| VM2
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 2 -->
+                <div class="diagram-container" id="diagram2">
+                    <div class="diagram-title">2. Ansible Deployment Architecture</div>
+                    <div class="diagram-description">
+                        Illustrates how the Ansible role is structured and how tasks flow through installation, 
+                        configuration, database restore, backup, and restore operations.
+                    </div>
+                    <div class="mermaid">
+graph LR
+    subgraph Ansible["Ansible Control Machine"]
+        Play["📋 Playbook<br/>site.yml"]
+        Role["🔧 mssql Role"]
+        Inv["📝 Inventory"]
+    end
+    
+    subgraph Tasks["Task Execution"]
+        T1["📥 Install"]
+        T2["⚙️ Configure"]
+        T3["📊 Database"]
+        T4["💾 Backup"]
+        T5["↩️ Restore"]
+    end
+    
+    subgraph Targets["Target Servers"]
+        V1["VM1<br/>Primary"]
+        V2["VM2<br/>Secondary"]
+    end
+    
+    Play --> Role
+    Role --> T1
+    T1 --> T2
+    T2 --> T3
+    T3 --> T4
+    T4 --> T5
+    
+    Play --> Inv
+    Inv --> V1
+    Inv --> V2
+    
+    T1 -.->|on both| V1
+    T1 -.->|on both| V2
+    T2 -.->|on both| V1
+    T2 -.->|on both| V2
+    T3 -.->|on both| V1
+    T3 -.->|on both| V2
+    T4 -.->|on VM1| V1
+    T5 -.->|on VM2| V2
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 3 -->
+                <div class="diagram-container" id="diagram3">
+                    <div class="diagram-title">3. FastAPI Deployment Service Architecture</div>
+                    <div class="diagram-description">
+                        Shows the FastAPI service architecture with routers, background task processing, 
+                        and how it executes Ansible playbooks to manage MSSQL deployment.
+                    </div>
+                    <div class="mermaid">
+graph TB
+    subgraph Client["Client Layer"]
+        Web["🌐 Web Browser"]
+        CLI["💻 CLI/curl"]
+        App["📱 Application"]
+    end
+    
+    subgraph FastAPI["FastAPI Server"]
+        Router["🛣️ Routers"]
+        Deploy["🚀 Deploy Routes"]
+        Health["❤️ Health Routes"]
+        Logs["📝 Log Routes"]
+        Runner["🎯 AnsibleRunner"]
+    end
+    
+    subgraph Background["Background Processing"]
+        Queue["📦 Task Queue"]
+        Tasks["⚙️ Background Tasks"]
+    end
+    
+    subgraph Ansible["Ansible Execution"]
+        Playbook["📋 Playbook Runner"]
+        Inventory["📝 Inventory"]
+    end
+    
+    subgraph Targets["Target Infrastructure"]
+        V1["🖥️ VM1"]
+        V2["🖥️ VM2"]
+    end
+    
+    Web -->|HTTP| Router
+    CLI -->|HTTP| Router
+    App -->|HTTP| Router
+    
+    Router --> Deploy
+    Router --> Health
+    Router --> Logs
+    
+    Deploy --> Queue
+    Health --> Runner
+    Logs --> Runner
+    
+    Queue --> Tasks
+    Tasks --> Runner
+    Runner --> Playbook
+    Runner --> Inventory
+    
+    Playbook --> Ansible
+    Inventory --> Ansible
+    
+    Ansible --> V1
+    Ansible --> V2
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 4 -->
+                <div class="diagram-container" id="diagram4">
+                    <div class="diagram-title">4. Backup and Restore Data Flow</div>
+                    <div class="diagram-description">
+                        Visualizes the complete backup creation on VM1, transfer to control machine, 
+                        and restore to VM2 workflow using 10 parallel stripes for performance.
+                    </div>
+                    <div class="mermaid">
+graph LR
+    subgraph VM1Backup["VM1: Backup Creation"]
+        DB1["🗄️ AdventureWorks<br/>Database"]
+        Backup["💾 10x Striped Backup<br/>adv_stripe_01-10.bak"]
+        Dir1["📁 /backup/striped/"]
+    end
+    
+    subgraph Transfer["Transfer Layer"]
+        Fetch["📥 Fetch<br/>ansible module"]
+        Local["💻 Control Machine<br/>./backups/vm1_striped/"]
+        Copy["📤 Copy<br/>ansible module"]
+    end
+    
+    subgraph VM2Restore["VM2: Restore Operation"]
+        Dir2["📁 /backup/striped/"]
+        Restore["↩️ RESTORE DATABASE<br/>from 10x striped"]
+        DB2["🗄️ AdventureWorks<br/>Database"]
+    end
+    
+    DB1 -->|BACKUP to| Backup
+    Backup --> Dir1
+    Dir1 -->|fetch| Fetch
+    Fetch --> Local
+    Local -->|copy| Copy
+    Copy --> Dir2
+    Dir2 -->|RESTORE from| Restore
+    Restore --> DB2
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 5 -->
+                <div class="diagram-container" id="diagram5">
+                    <div class="diagram-title">5. Request/Response Flow - API Call</div>
+                    <div class="diagram-description">
+                        Sequence diagram showing how an API request is processed: immediate response, 
+                        background task execution, and polling for status updates.
+                    </div>
+                    <div class="mermaid">
+sequenceDiagram
+    participant Client as 🖥️ Client
+    participant API as ⚡ FastAPI API
+    participant Queue as 📦 Task Queue
+    participant Ansible as 🎯 Ansible
+    participant Target as 🖥️ Target VMs
+    
+    Client->>API: POST /deploy/install
+    API->>Queue: Add background task
+    API-->>Client: 202 Accepted
+    
+    Note over Client: Returns immediately
+    
+    Queue->>Ansible: Execute playbook
+    Ansible->>Target: Run tasks
+    Target-->>Ansible: Task output
+    Ansible-->>Queue: Execution complete
+    Queue->>API: Store in history
+    
+    Note over Client: Client polls for status
+    Client->>API: GET /logs/latest
+    API-->>Client: Current logs
+    
+    Client->>API: GET /deploy/history
+    API-->>Client: Execution status
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 6 -->
+                <div class="diagram-container" id="diagram6">
+                    <div class="diagram-title">6. Deployment Task Execution Sequence</div>
+                    <div class="diagram-description">
+                        Shows all deployment phases: installation, configuration, database restore, 
+                        backup creation, and restore operations in order.
+                    </div>
+                    <div class="mermaid">
+graph TD
+    Start["🚀 Start Deployment"] --> Phase1["📥 Phase 1: Install"]
+    Phase1 --> T1a["Install dependencies"]
+    T1a --> T1b["Add Microsoft repos"]
+    T1b --> T1c["Install MSSQL Server"]
+    T1c --> T1d["Install MSSQL Tools"]
+    T1d --> T1e["Run MSSQL setup"]
+    T1e --> T1f["Start service"]
+    T1f --> Phase2["⚙️ Phase 2: Configure"]
+    
+    Phase2 --> T2a["Create directories"]
+    T2a --> T2b["Set default paths"]
+    T2b --> T2c["Configure network"]
+    T2c --> T2d["Enable SQL Agent"]
+    T2d --> Phase3["📊 Phase 3: Database"]
+    
+    Phase3 --> T3a["Download AdventureWorks"]
+    T3a --> T3b["Restore database"]
+    T3b --> T3c["Verify database"]
+    T3c --> Decision{"Which VM?"}
+    
+    Decision -->|VM1| Phase4["💾 Phase 4: Backup"]
+    Decision -->|VM2| Skip1["⏭️ Skip Backup"]
+    
+    Phase4 --> T4a["Create backup dir"]
+    T4a --> T4b["Create 10x striped backup"]
+    T4b --> T4c["Verify backup files"]
+    T4c --> Phase5["↩️ Phase 5: Restore"]
+    
+    Skip1 --> Phase5
+    
+    Phase5 --> T5a["Fetch backups from VM1"]
+    T5a --> T5b["Copy to VM2"]
+    T5b --> T5c["Restore from stripes"]
+    T5c --> T5d["Verify restore"]
+    T5d --> End["✅ Complete"]
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 7 -->
+                <div class="diagram-container" id="diagram7">
+                    <div class="diagram-title">7. Health Check Flow</div>
+                    <div class="diagram-description">
+                        Illustrates the complete health check sequence: Ansible verification, 
+                        inventory validation, disk space check, and system resource monitoring.
+                    </div>
+                    <div class="mermaid">
+graph TD
+    Start["🏥 Health Check<br/>GET /health/ready"] --> C1["✓ Ansible<br/>Installed?"]
+    C1 -->|No| Fail1["❌ FAIL:<br/>Ansible not found"]
+    C1 -->|Yes| C2["✓ Inventory<br/>File exists?"]
+    
+    C2 -->|No| Fail2["❌ FAIL:<br/>Inventory missing"]
+    C2 -->|Yes| C3["✓ Disk Space<br/>≥ 5GB?"]
+    
+    C3 -->|No| Fail3["❌ FAIL:<br/>Insufficient space"]
+    C3 -->|Yes| C4["✓ CPU<br/>< 90%?"]
+    
+    C4 -->|No| Warn1["⚠️ WARN:<br/>CPU high"]
+    C4 -->|Yes| C5["✓ Memory<br/>< 90%?"]
+    
+    C5 -->|No| Warn2["⚠️ WARN:<br/>Memory high"]
+    C5 -->|Yes| Success["✅ READY:<br/>All checks pass"]
+    
+    Fail1 --> Overall["📊 Overall<br/>Status"]
+    Fail2 --> Overall
+    Fail3 --> Overall
+    Warn1 --> Overall
+    Warn2 --> Overall
+    Success --> Overall
+    
+    Overall -->|Any FAIL| Red["🔴 Ready: FALSE"]
+    Overall -->|All PASS| Green["🟢 Ready: TRUE"]
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 8 -->
+                <div class="diagram-container" id="diagram8">
+                    <div class="diagram-title">8. Configuration Management Hierarchy</div>
+                    <div class="diagram-description">
+                        Shows how configuration variables are merged: CLI arguments override host variables, 
+                        which override group variables, which override defaults.
+                    </div>
+                    <div class="mermaid">
+graph TB
+    subgraph Priority["Priority Order<br/>Highest to Lowest"]
+        L1["1️⃣ CLI Arguments<br/>ansible-playbook -e var=value"]
+        L2["2️⃣ Host Variables<br/>host_vars/vm1.yml"]
+        L3["3️⃣ Group Variables<br/>group_vars/mssql_servers.yml"]
+        L4["4️⃣ Role Defaults<br/>roles/mssql/defaults/main.yml"]
+    end
+    
+    Example1["🔹 sa_password<br/>CLI override"]
+    Example2["🔹 instance_name<br/>From host_vars"]
+    Example3["🔹 mssql_version<br/>From group_vars"]
+    Example4["🔹 mssql_port<br/>From defaults"]
+    
+    L1 --> Example1
+    L2 --> Example2
+    L3 --> Example3
+    L4 --> Example4
+    
+    Result["📋 Final Configuration<br/>Merged from hierarchy"]
+    
+    Example1 --> Result
+    Example2 --> Result
+    Example3 --> Result
+    Example4 --> Result
+    
+    Result --> VM1["🖥️ VM1<br/>instance1"]
+    Result --> VM2["🖥️ VM2<br/>instance2"]
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 9 -->
+                <div class="diagram-container" id="diagram9">
+                    <div class="diagram-title">9. Error Handling Flow</div>
+                    <div class="diagram-description">
+                        Visualizes how errors are handled: task execution, try/catch, error categorization, 
+                        retry logic, and logging to execution history.
+                    </div>
+                    <div class="mermaid">
+graph TD
+    Task["⚙️ Execute Task"] --> Try["🔄 Try Execution"]
+    Try -->|Success| Pass["✅ Success"]
+    Try -->|Exception| Catch["🛑 Catch Error"]
+    
+    Catch --> Type{"Error Type?"}
+    
+    Type -->|Timeout| Retry["🔁 Retry Logic<br/>Up to 3 times"]
+    Type -->|Network| Retry
+    Type -->|Other| Fatal["💥 Fatal Error"]
+    
+    Retry --> Attempt{"Retry<br/>Successful?"}
+    Attempt -->|Yes| Pass
+    Attempt -->|No| Fatal
+    
+    Pass --> Record1["📝 Log: SUCCESS"]
+    Fatal --> Record2["📝 Log: FAILED"]
+    
+    Record1 --> History["📊 Store in<br/>Execution History"]
+    Record2 --> History
+    
+    History --> Response["📤 Return to Client"]
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 10 -->
+                <div class="diagram-container" id="diagram10">
+                    <div class="diagram-title">10. VM Connectivity Verification</div>
+                    <div class="diagram-description">
+                        Shows how the system verifies connectivity to target VMs: building commands, 
+                        SSH execution, pinging hosts, and returning status.
+                    </div>
+                    <div class="mermaid">
+graph LR
+    API["⚡ FastAPI<br/>POST /deploy/ping"] --> Cmd["⌨️ Build Command<br/>ansible all -i inventory -m ping"]
+    Cmd --> Exec["🚀 Execute<br/>subprocess.run"]
+    Exec --> SSH1["🔑 SSH to VM1"]
+    Exec --> SSH2["🔑 SSH to VM2"]
+    
+    SSH1 -->|Success| Pong1["🔔 PONG<br/>VM1 alive"]
+    SSH1 -->|Failure| Fail1["❌ VM1<br/>unreachable"]
+    
+    SSH2 -->|Success| Pong2["🔔 PONG<br/>VM2 alive"]
+    SSH2 -->|Failure| Fail2["❌ VM2<br/>unreachable"]
+    
+    Pong1 --> Result{"All<br/>Connected?"}
+    Pong2 --> Result
+    Fail1 --> Result
+    Fail2 --> Result
+    
+    Result -->|Yes| Response["📤 Response<br/>status: success"]
+    Result -->|No| Response2["📤 Response<br/>status: failed"]
+    
+    Response --> Client["🖥️ Client"]
+    Response2 --> Client
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 50px;">Summary</h2>
+                <p>
+                    These 10 diagrams provide comprehensive visualization of the MSSQL deployment system. 
+                    Use them as a reference during planning, deployment, and troubleshooting.
+                </p>
+
+                <div class="card success">
+                    <h3>✅ All Diagrams Complete</h3>
+                    <p>
+                        Each diagram is interactive and rendered using Mermaid.js. 
+                        You can view them in a browser and even save them as images if needed.
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Architecture Diagrams</strong> - 10 System Visualizations</p>
+        <p>Complete technical reference for MSSQL Deployment Automation</p>
+    </footer>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'monotoneX'
+            },
+            sequence: {
+                actorMargin: 50,
+                boxMargin: 10,
+                noteMargin: 10,
+                messageMargin: 20,
+                mirrorActors: false
+            },
+            themeVariables: {
+                background: '#0b1220',
+                primaryColor: '#2563eb',
+                secondaryColor: '#22c55e',
+                tertiaryColor: '#38bdf8',
+                lineColor: '#94a3b8',
+                mainBkg: '#111827',
+                primaryTextColor: '#e2e8f0',
+                secondaryTextColor: '#94a3b8',
+                tertiaryTextColor: '#bfdbfe',
+                border1: '#334155',
+                border2: '#475569',
+                clusterBkg: '#111827',
+                clusterBorder: '#334155',
+                noteBkgColor: '#0f172a',
+                noteTextColor: '#e2e8f0',
+                labelColor: '#e2e8f0',
+                textColor: '#e2e8f0',
+                messageTextColor: '#e2e8f0',
+                actorBorder: '#475569',
+                actorBkg: '#111827',
+                actorTextColor: '#e2e8f0'
+            }
+        });
+        mermaid.contentLoaded();
+    </script>
+</body>
+</html>

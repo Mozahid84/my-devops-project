@@ -1,0 +1,46 @@
+---
+# AWX Job Template Configuration
+
+# Main Installation Job Template
+- name: MSSQL-Deploy-Install
+  description: Install and configure MSSQL Server
+  job_type: run
+  inventory: mssql-deployment-inventory
+  project: mssql-deploy
+  playbook: playbooks/site.yml
+  credential: mssql-ssh-credential
+  become_enabled: true
+  verbosity: 1
+  ask_limit_on_launch: false
+  ask_tags_on_launch: true
+  ask_skip_tags_on_launch: true
+  organization: Default
+
+# Backup Job Template
+- name: MSSQL-Backup-Striped
+  description: Create 10-stripe backup and transfer
+  job_type: run
+  inventory: mssql-deployment-inventory
+  project: mssql-deploy
+  playbook: playbooks/backup.yml
+  credential: mssql-ssh-credential
+  become_enabled: true
+  verbosity: 1
+  organization: Default
+
+# Workflow Template
+- name: MSSQL-Complete-Workflow
+  description: Complete MSSQL deployment workflow
+  organization: Default
+  workflow_nodes:
+    - name: Install MSSQL
+      job_template: MSSQL-Deploy-Install
+      success_nodes: []
+      failure_nodes: []
+      always_nodes: []
+
+    - name: Create Backup
+      job_template: MSSQL-Backup-Striped
+      success_nodes: []
+      failure_nodes: []
+      always_nodes: []

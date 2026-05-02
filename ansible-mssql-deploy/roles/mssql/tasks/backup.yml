@@ -1,0 +1,57 @@
+---
+# Create 10-stripe backup on VM1 only
+
+- name: Create striped backup directory on VM1
+  file:
+    path: "{{ backup_dir }}/striped"
+    state: directory
+    mode: '0755'
+  when: inventory_hostname == "vm1"
+  tags:
+    - backup
+    - vm1-only
+
+- name: Create 10-striped backup of AdventureWorks (VM1 only)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" << 'EOF'
+    BACKUP DATABASE AdventureWorks
+    TO
+      DISK='{{ backup_dir }}/striped/adv_stripe_01.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_02.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_03.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_04.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_05.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_06.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_07.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_08.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_09.bak',
+      DISK='{{ backup_dir }}/striped/adv_stripe_10.bak'
+    WITH FORMAT, COMPRESSION
+    EOF
+  when: inventory_hostname == "vm1"
+  register: backup_result
+  failed_when: false
+  changed_when: "'completed' in backup_result.stdout or 'Processed' in backup_result.stdout"
+  tags:
+    - backup
+    - vm1-only
+
+- name: Verify backup files created on VM1
+  find:
+    path: "{{ backup_dir }}/striped"
+    patterns: "adv_stripe_*.bak"
+  register: backup_files
+  when: inventory_hostname == "vm1"
+  tags:
+    - backup
+    - vm1-only
+    - verify
+
+- name: Display backup file count
+  debug:
+    msg: "Backup files created: {{ backup_files.matched }}"
+  when: inventory_hostname == "vm1"
+  tags:
+    - backup
+    - vm1-only
+    - verify

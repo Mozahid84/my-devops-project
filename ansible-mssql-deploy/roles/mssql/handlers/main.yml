@@ -1,0 +1,10 @@
+---
+# Handlers for MSSQL role
+
+- name: restart mssql service
+  systemd:
+    name: mssql-server
+    state: restarted
+  tags:
+    - handlers
+    - service

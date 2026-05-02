@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ansible Architecture - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">🏢 Ansible Architecture</div>
+                <div class="header-subtitle">Enterprise deployment design</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="readme.html">Ansible</a>
+                <a href="design.html">Architecture</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>🏢 Ansible</h3>
+            <ul>
+                <li><a href="readme.html">Quick Start</a></li>
+                <li><a href="design.html" class="active">Architecture</a></li>
+            </ul>
+
+            <h3>📖 Other</h3>
+            <ul>
+                <li><a href="../architecture/diagrams.html">System Diagrams</a></li>
+                <li><a href="../guides/setup.html">Setup Guide</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>🏢 Ansible Architecture & Design</h1>
+
+                <div class="alert info">
+                    <strong>📊 Complete Design Document</strong> - Detailed architecture for enterprise deployment
+                </div>
+
+                <h2>Architecture Overview</h2>
+
+                <p>
+                    The Ansible approach implements Infrastructure-as-Code (IaC) principles for enterprise MSSQL deployment.
+                    It provides reproducible, scalable, and maintainable deployment automation.
+                </p>
+
+                <h2>Key Design Principles</h2>
+
+                <h3>1. Modularity</h3>
+                <p>
+                    Each deployment phase is separated into discrete tasks within the mssql role.
+                    This allows reuse, testing, and modification without affecting other components.
+                </p>
+
+                <h3>2. Idempotency</h3>
+                <p>
+                    All tasks are designed to be idempotent—running them multiple times produces the same result.
+                    This enables safe re-runs and updates without duplicating resources.
+                </p>
+
+                <h3>3. Variable Hierarchy</h3>
+                <p>
+                    Configuration follows a strict hierarchy: CLI args → host vars → group vars → defaults.
+                    This enables flexibility while maintaining sensible defaults.
+                </p>
+
+                <h3>4. Error Handling</h3>
+                <p>
+                    Tasks include retry logic for network operations and conditional execution based on host roles.
+                    Failed tasks generate detailed logs for troubleshooting.
+                </p>
+
+                <h2>Deployment Phases</h2>
+
+                <h3>Phase 1: Installation</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Purpose</th>
+                            <th>Hosts</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Install dependencies</td>
+                            <td>System packages and libraries</td>
+                            <td>All</td>
+                            <td>2 min</td>
+                        </tr>
+                        <tr>
+                            <td>Add Microsoft repos</td>
+                            <td>Enable MSSQL repositories</td>
+                            <td>All</td>
+                            <td>1 min</td>
+                        </tr>
+                        <tr>
+                            <td>Install MSSQL Server</td>
+                            <td>Download and install package</td>
+                            <td>All</td>
+                            <td>5-10 min</td>
+                        </tr>
+                        <tr>
+                            <td>Install MSSQL Tools</td>
+                            <td>sqlcmd and other tools</td>
+                            <td>All</td>
+                            <td>3-5 min</td>
+                        </tr>
+                        <tr>
+                            <td>Run MSSQL setup</td>
+                            <td>Configure instance with SA password</td>
+                            <td>All</td>
+                            <td>2-3 min</td>
+                        </tr>
+                        <tr>
+                            <td>Start service</td>
+                            <td>Enable and start SQL Server</td>
+                            <td>All</td>
+                            <td>1 min</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 2: Configuration</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Purpose</th>
+                            <th>Hosts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Create directories</td>
+                            <td>Backup, data, and log directories</td>
+                            <td>All</td>
+                        </tr>
+                        <tr>
+                            <td>Set default paths</td>
+                            <td>Configure default database paths</td>
+                            <td>All</td>
+                        </tr>
+                        <tr>
+                            <td>Configure network</td>
+                            <td>Enable TCP/IP on port 1433</td>
+                            <td>All</td>
+                        </tr>
+                        <tr>
+                            <td>Enable SQL Agent</td>
+                            <td>Activate SQL Server Agent service</td>
+                            <td>All</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 3: Database Restore</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Purpose</th>
+                            <th>Hosts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Download AdventureWorks</td>
+                            <td>Get backup from GitHub</td>
+                            <td>All</td>
+                        </tr>
+                        <tr>
+                            <td>Restore database</td>
+                            <td>Restore with MOVE clauses</td>
+                            <td>All</td>
+                        </tr>
+                        <tr>
+                            <td>Verify database</td>
+                            <td>Confirm restore success</td>
+                            <td>All</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 4: Backup Creation (VM1 Only)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Purpose</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Create backup dir</td>
+                            <td>Prepare storage for backups</td>
+                            <td>/backup/striped/</td>
+                        </tr>
+                        <tr>
+                            <td>Create 10x backup</td>
+                            <td>High-performance striped backup</td>
+                            <td>adv_stripe_01-10.bak</td>
+                        </tr>
+                        <tr>
+                            <td>Verify backups</td>
+                            <td>Confirm all stripe files exist</td>
+                            <td>File count check</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 5: Backup Transfer & Restore (VM2 Only)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Purpose</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fetch backups</td>
+                            <td>Copy from VM1 to control machine</td>
+                            <td>ansible fetch module</td>
+                        </tr>
+                        <tr>
+                            <td>Copy to VM2</td>
+                            <td>Transfer from control to VM2</td>
+                            <td>ansible copy module</td>
+                        </tr>
+                        <tr>
+                            <td>Restore from backup</td>
+                            <td>Restore from all 10 stripes</td>
+                            <td>RESTORE DATABASE</td>
+                        </tr>
+                        <tr>
+                            <td>Verify restore</td>
+                            <td>Confirm restore succeeded</td>
+                            <td>Query count check</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Role Structure</h2>
+
+                <h3>defaults/main.yml</h3>
+                <p>Default values used when variables aren't overridden:</p>
+                <ul>
+                    <li>MSSQL version, edition, port</li>
+                    <li>Directory paths (backup, data, log)</li>
+                    <li>SA password (should override in group_vars)</li>
+                    <li>Tools path</li>
+                </ul>
+
+                <h3>tasks/main.yml</h3>
+                <p>Orchestrates all subtasks in order:</p>
+                <ul>
+                    <li>Import install.yml</li>
+                    <li>Import configure.yml</li>
+                    <li>Import adventureworks.yml</li>
+                    <li>Import backup.yml (conditional for VM1)</li>
+                    <li>Import restore.yml (conditional for VM2)</li>
+                </ul>
+
+                <h3>handlers/main.yml</h3>
+                <p>Event handlers for service management:</p>
+                <ul>
+                    <li>Restart SQL Server service</li>
+                    <li>Reload configuration</li>
+                </ul>
+
+                <h2>Variable Management</h2>
+
+                <h3>Hierarchy (Highest to Lowest Priority)</h3>
+                <ol>
+                    <li><strong>CLI Arguments:</strong> <code>ansible-playbook -e var=value</code></li>
+                    <li><strong>Host Variables:</strong> <code>host_vars/vm1.yml</code></li>
+                    <li><strong>Group Variables:</strong> <code>group_vars/mssql_servers.yml</code></li>
+                    <li><strong>Role Defaults:</strong> <code>roles/mssql/defaults/main.yml</code></li>
+                </ol>
+
+                <h3>Key Variables</h3>
+                <ul>
+                    <li><strong>mssql_version:</strong> 2019</li>
+                    <li><strong>mssql_edition:</strong> Developer or Enterprise</li>
+                    <li><strong>sa_password:</strong> Strong password (must override)</li>
+                    <li><strong>mssql_port:</strong> 1433</li>
+                    <li><strong>backup_dir:</strong> /backup/striped/</li>
+                    <li><strong>data_dir:</strong> /var/opt/mssql/data/</li>
+                    <li><strong>instance_name:</strong> instance1 or instance2</li>
+                    <li><strong>backup_location:</strong> primary or secondary</li>
+                </ul>
+
+                <h2>Inventory Structure</h2>
+
+                <h3>hosts.ini</h3>
+                <pre><code>[mssql_servers]
+vm1 ansible_host=192.168.56.101 instance_name=instance1
+vm2 ansible_host=192.168.56.102 instance_name=instance2
+
+[mssql_servers:vars]
+ansible_user=root
+ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
+
+                <h3>Group Variables (group_vars/mssql_servers.yml)</h3>
+                <pre><code>mssql_version: 2019
+sa_password: "YourStrongPassword!@#"
+mssql_port: 1433
+backup_dir: /backup/striped
+data_dir: /var/opt/mssql/data</code></pre>
+
+                <h3>Host Variables (host_vars/vm1.yml)</h3>
+                <pre><code>instance_name: instance1
+backup_location: primary</code></pre>
+
+                <h2>Conditional Execution</h2>
+
+                <p>
+                    Certain tasks run only on specific hosts:
+                </p>
+
+                <ul>
+                    <li><strong>Backup tasks:</strong> Only on VM1 (when backup_location == 'primary')</li>
+                    <li><strong>Restore tasks:</strong> Only on VM2 (when backup_location == 'secondary')</li>
+                </ul>
+
+                <p>
+                    This prevents unnecessary execution and ensures backup/restore operates as intended.
+                </p>
+
+                <h2>Error Handling</h2>
+
+                <h3>Retry Logic</h3>
+                <p>
+                    Network-dependent tasks include retry logic:
+                </p>
+                <ul>
+                    <li>Retries: 3 times</li>
+                    <li>Delay: 10 seconds between retries</li>
+                    <li>Applies to: download, SSH operations</li>
+                </ul>
+
+                <h3>Task Conditionals</h3>
+                <ul>
+                    <li><strong>when:</strong> Conditional execution based on variables</li>
+                    <li><strong>changed_when:</strong> Determine if task made changes</li>
+                    <li><strong>failed_when:</strong> Custom failure conditions</li>
+                </ul>
+
+                <h2>Playbook Execution</h2>
+
+                <h3>site.yml (Main Deployment)</h3>
+                <ul>
+                    <li>pre_tasks: OS validation</li>
+                    <li>role invocation: Run mssql role on all hosts</li>
+                    <li>post_tasks: Summary report</li>
+                </ul>
+
+                <h3>backup.yml (Backup & Restore)</h3>
+                <ul>
+                    <li>Run backup tasks on VM1 only</li>
+                    <li>Run restore tasks on VM2 only</li>
+                </ul>
+
+                <h2>AWX Integration</h2>
+
+                <p>
+                    Configuration files for AWX orchestration (optional):
+                </p>
+
+                <ul>
+                    <li><strong>project.yml:</strong> Git-based project definition</li>
+                    <li><strong>inventory.yml:</strong> AWX inventory import</li>
+                    <li><strong>credentials.yml:</strong> SSH credential template</li>
+                    <li><strong>job-template.yml:</strong> Job template definitions</li>
+                </ul>
+
+                <h2>GitLab CI/CD Pipeline</h2>
+
+                <p>
+                    Automated pipeline for code quality and deployment:
+                </p>
+
+                <ul>
+                    <li><strong>Lint Stage:</strong> YAML syntax check, ansible-lint</li>
+                    <li><strong>Deploy Stage:</strong> Manual trigger for actual deployment</li>
+                </ul>
+
+                <h2>Performance Considerations</h2>
+
+                <ul>
+                    <li><strong>Parallel Execution:</strong> Strategies configured for optimal performance</li>
+                    <li><strong>Batch Sizing:</strong> Default batch size 1 for safe execution</li>
+                    <li><strong>Timeouts:</strong> Set appropriately for long operations</li>
+                    <li><strong>10x Backup Stripes:</strong> Parallel backup for performance</li>
+                </ul>
+
+                <h2>Security Practices</h2>
+
+                <ul>
+                    <li><strong>SSH Key Auth:</strong> No password authentication</li>
+                    <li><strong>Vault:</strong> Support for Ansible Vault for sensitive data</li>
+                    <li><strong>Credential Management:</strong> Secure handling of SA password</li>
+                    <li><strong>Audit Logging:</strong> Complete execution history</li>
+                </ul>
+
+                <h2>Scalability</h2>
+
+                <p>
+                    The architecture supports scaling to multiple VMs:
+                </p>
+
+                <ul>
+                    <li>Add new hosts to inventory/hosts.ini</li>
+                    <li>Create host_vars/vm3.yml, etc.</li>
+                    <li>Run playbook against all or subset of hosts</li>
+                    <li>Conditional execution handles role-based differences</li>
+                </ul>
+
+                <h2>Maintenance & Updates</h2>
+
+                <p>
+                    Future enhancements can be made by:
+                </p>
+
+                <ul>
+                    <li>Adding new tasks to appropriate phase</li>
+                    <li>Creating new playbooks for additional operations</li>
+                    <li>Updating variables without modifying tasks</li>
+                    <li>Extending roles for additional functionality</li>
+                </ul>
+
+                <div class="card success" style="margin-top: 30px;">
+                    <h3>✅ Architecture Complete</h3>
+                    <p>The Ansible architecture provides a solid, scalable, and maintainable solution for enterprise MSSQL deployment.</p>
+                    <p style="margin-bottom: 0;">
+                        <a href="readme.html" class="btn primary">Back to Ansible Guide</a>
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Ansible Architecture</strong> - Complete design document</p>
+        <p>Enterprise Infrastructure-as-Code for MSSQL deployment</p>
+    </footer>
+</body>
+</html>

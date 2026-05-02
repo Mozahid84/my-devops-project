@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ansible Implementation - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">🏢 Ansible Implementation</div>
+                <div class="header-subtitle">Enterprise orchestration with AWX integration</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="readme.html">Ansible</a>
+                <a href="../fastapi/readme.html">FastAPI</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>🏢 Ansible</h3>
+            <ul>
+                <li><a href="readme.html" class="active">Quick Start</a></li>
+                <li><a href="design.html">Architecture</a></li>
+            </ul>
+
+            <h3>⚡ Alternative</h3>
+            <ul>
+                <li><a href="../fastapi/readme.html">FastAPI</a></li>
+            </ul>
+
+            <h3>📖 Setup & Info</h3>
+            <ul>
+                <li><a href="../guides/setup.html">Setup Guide</a></li>
+                <li><a href="../architecture/diagrams.html">Diagrams</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>🏢 Ansible + AWX Implementation Guide</h1>
+
+                <div class="alert info">
+                    <strong>✓ Enterprise Solution</strong> - Team collaboration, RBAC, audit logs, and CI/CD integration
+                </div>
+
+                <h2>Overview</h2>
+
+                <p>
+                    The Ansible approach provides a complete Infrastructure-as-Code solution for enterprise environments.
+                    It's perfect for teams that need:
+                </p>
+
+                <ul>
+                    <li>Team-based orchestration</li>
+                    <li>Role-based access control (RBAC)</li>
+                    <li>Audit trails and logging</li>
+                    <li>Complex deployment workflows</li>
+                    <li>GitLab CI/CD integration</li>
+                    <li>Version control</li>
+                </ul>
+
+                <h2>Key Components</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                    <div class="card">
+                        <h4>📋 Playbooks</h4>
+                        <p><strong>site.yml</strong> - Main deployment playbook
+                            <br><strong>backup.yml</strong> - Backup & restore playbook</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔧 Roles</h4>
+                        <p><strong>mssql</strong> - Complete MSSQL installation and configuration role</p>
+                    </div>
+                    <div class="card">
+                        <h4>📝 Inventory</h4>
+                        <p>Hosts, groups, and variables for target VMs</p>
+                    </div>
+                    <div class="card">
+                        <h4>🎛️ AWX</h4>
+                        <p>Optional orchestration UI for team management</p>
+                    </div>
+                </div>
+
+                <h2>Quick Start (5 Minutes)</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 1: Navigate to Project</h4>
+                            <pre><code>cd ansible-mssql-deploy</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 2: Update Inventory</h4>
+                            <pre><code># Edit inventory/hosts.ini with your VM IPs</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 3: Configure Variables</h4>
+                            <pre><code># Edit group_vars/mssql_servers.yml with strong SA password</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 4: Run Deployment</h4>
+                            <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 5: Monitor Progress</h4>
+                            <p>Watch the output for any errors or issues</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Project Structure</h2>
+
+                <pre><code>ansible-mssql-deploy/
+├── playbooks/              # Deployment playbooks
+│   ├── site.yml           # Main installation
+│   └── backup.yml         # Backup & restore
+├── roles/mssql/           # Main role
+│   ├── defaults/
+│   │   └── main.yml       # Default variables
+│   ├── tasks/
+│   │   ├── main.yml       # Task orchestration
+│   │   ├── install.yml    # Installation
+│   │   ├── configure.yml  # Configuration
+│   │   ├── adventureworks.yml  # Database
+│   │   ├── backup.yml     # 10x striped backup
+│   │   └── restore.yml    # Restore from backup
+│   ├── handlers/
+│   │   └── main.yml       # Service handlers
+│   └── vars/              # Role variables
+├── inventory/
+│   └── hosts.ini          # Target hosts
+├── group_vars/
+│   └── mssql_servers.yml  # Group variables
+├── host_vars/
+│   ├── vm1.yml           # VM1 specific
+│   └── vm2.yml           # VM2 specific
+├── awx/                   # AWX configuration
+│   ├── project.yml
+│   ├── inventory.yml
+│   ├── credentials.yml
+│   └── job-template.yml
+├── .gitlab-ci.yml         # CI/CD pipeline
+├── README.md              # Quick start
+└── DESIGN.md              # Architecture</code></pre>
+
+                <h2>Advanced Commands</h2>
+
+                <h3>Dry Run (Test Without Making Changes)</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml -C</code></pre>
+
+                <h3>Run Specific Tasks</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml -t install
+ansible-playbook -i inventory/hosts.ini playbooks/site.yml -t configure
+ansible-playbook -i inventory/hosts.ini playbooks/site.yml -t adventureworks</code></pre>
+
+                <h3>Run on Specific Host</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml -l vm1
+ansible-playbook -i inventory/hosts.ini playbooks/site.yml -l vm2</code></pre>
+
+                <h3>Verbose Output (Debugging)</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml -vvv</code></pre>
+
+                <h3>Backup Only (VM1)</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/backup.yml -l vm1</code></pre>
+
+                <h3>Restore Only (VM2)</h3>
+                <pre><code>ansible-playbook -i inventory/hosts.ini playbooks/backup.yml -l vm2</code></pre>
+
+                <h2>Variable Configuration</h2>
+
+                <h3>Default Variables (role defaults)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Default Value</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>mssql_version</td>
+                            <td>2019</td>
+                            <td>MSSQL Server version</td>
+                        </tr>
+                        <tr>
+                            <td>mssql_edition</td>
+                            <td>Developer</td>
+                            <td>Edition (Developer/Enterprise)</td>
+                        </tr>
+                        <tr>
+                            <td>mssql_port</td>
+                            <td>1433</td>
+                            <td>SQL Server listening port</td>
+                        </tr>
+                        <tr>
+                            <td>backup_dir</td>
+                            <td>/backup/striped</td>
+                            <td>Backup storage location</td>
+                        </tr>
+                        <tr>
+                            <td>data_dir</td>
+                            <td>/var/opt/mssql/data</td>
+                            <td>Data files location</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Task Breakdown</h2>
+
+                <h3>Phase 1: Installation (10-15 minutes)</h3>
+                <ul>
+                    <li>Install system dependencies</li>
+                    <li>Add Microsoft repositories</li>
+                    <li>Install MSSQL Server package</li>
+                    <li>Install MSSQL Tools</li>
+                    <li>Run MSSQL setup</li>
+                    <li>Start SQL Server service</li>
+                </ul>
+
+                <h3>Phase 2: Configuration (5-10 minutes)</h3>
+                <ul>
+                    <li>Create backup directories</li>
+                    <li>Create data directories</li>
+                    <li>Set default database paths</li>
+                    <li>Configure network settings</li>
+                    <li>Enable SQL Agent</li>
+                </ul>
+
+                <h3>Phase 3: Database Restore (10-15 minutes)</h3>
+                <ul>
+                    <li>Download AdventureWorks backup</li>
+                    <li>Restore database on both VMs</li>
+                    <li>Verify database integrity</li>
+                </ul>
+
+                <h3>Phase 4: Backup Creation (10-20 minutes, VM1 only)</h3>
+                <ul>
+                    <li>Create backup directory</li>
+                    <li>Create 10-stripe backup</li>
+                    <li>Verify backup files</li>
+                </ul>
+
+                <h3>Phase 5: Restore (10-20 minutes, VM2 only)</h3>
+                <ul>
+                    <li>Fetch backups from VM1</li>
+                    <li>Copy to local directory</li>
+                    <li>Transfer to VM2</li>
+                    <li>Restore from striped backup</li>
+                    <li>Verify restore success</li>
+                </ul>
+
+                <h2>AWX Integration (Optional)</h2>
+
+                <h3>Benefits of Using AWX</h3>
+                <ul>
+                    <li>Web-based UI for non-technical users</li>
+                    <li>Role-based access control (RBAC)</li>
+                    <li>Credential management</li>
+                    <li>Job history and audit logs</li>
+                    <li>Scheduled execution</li>
+                    <li>Workflow orchestration</li>
+                </ul>
+
+                <h3>Setup AWX (Optional)</h3>
+                <p>
+                    See <code>awx/</code> directory for configuration files that can be imported into AWX.
+                    Includes project, inventory, credentials, and job template definitions.
+                </p>
+
+                <h2>GitLab CI/CD Integration (Optional)</h2>
+
+                <h3>Setup Steps</h3>
+                <ol>
+                    <li>Create GitLab repository</li>
+                    <li>Push ansible-mssql-deploy project</li>
+                    <li>Add SSH_PRIVATE_KEY as CI variable</li>
+                    <li>Pipeline runs automatically on push</li>
+                </ol>
+
+                <h3>CI/CD Stages</h3>
+                <ul>
+                    <li><strong>Lint:</strong> Syntax check and ansible-lint</li>
+                    <li><strong>Deploy:</strong> Run playbook (manual trigger)</li>
+                </ul>
+
+                <h2>Troubleshooting</h2>
+
+                <h3>SSH Connection Issues</h3>
+                <div class="card">
+                    <h4>Problem: Permission denied (publickey)</h4>
+                    <p><strong>Solution:</strong> Verify SSH keys are set up correctly</p>
+                    <pre><code>ssh-copy-id -i ~/.ssh/id_rsa root@VM_IP</code></pre>
+                </div>
+
+                <h3>Ansible Issues</h3>
+                <div class="card">
+                    <h4>Problem: Task failed with "UNREACHABLE"</h4>
+                    <p><strong>Solution:</strong> Verify inventory and SSH connectivity</p>
+                    <pre><code>ansible all -i inventory/hosts.ini -m ping</code></pre>
+                </div>
+
+                <h3>MSSQL Issues</h3>
+                <div class="card">
+                    <h4>Problem: MSSQL service won't start</h4>
+                    <p><strong>Solution:</strong> Check system resources and SA password requirements</p>
+                    <pre><code>ansible all -i inventory/hosts.ini -m shell -a "systemctl status mssql-server"</code></pre>
+                </div>
+
+                <h2>Performance Tips</h2>
+
+                <ul>
+                    <li>Use <code>-C</code> flag for dry runs before actual deployment</li>
+                    <li>Use <code>-t</code> flag to run specific tags for faster iteration</li>
+                    <li>Monitor resource usage with <code>-vvv</code> for detailed output</li>
+                    <li>Use <code>-l</code> flag to limit to specific hosts for testing</li>
+                    <li>Backup before making configuration changes</li>
+                </ul>
+
+                <h2>What Gets Deployed</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>VM1</th>
+                            <th>VM2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>MSSQL Server 2019</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Instance: instance1</td>
+                            <td>✓</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Instance: instance2</td>
+                            <td></td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>AdventureWorks DB</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>10x Striped Backup</td>
+                            <td>✓</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Restored DB (from backup)</td>
+                            <td></td>
+                            <td>✓</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Next Steps</h2>
+
+                <ol>
+                    <li>Review the <a href="design.html">Architecture Design</a></li>
+                    <li>Follow the <a href="../guides/setup.html">Setup Guide</a></li>
+                    <li>Run: <code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml -C</code> (dry run)</li>
+                    <li>Deploy: <code>ansible-playbook -i inventory/hosts.ini playbooks/site.yml</code></li>
+                    <li>Verify in MSSQL Management Studio or CLI</li>
+                </ol>
+
+                <div class="card success" style="margin-top: 30px;">
+                    <h3>✅ Ready to Deploy?</h3>
+                    <p>Follow the <a href="../guides/setup.html">Setup Guide</a> first, then come back to run the playbooks.</p>
+                    <p style="margin-bottom: 0;">
+                        <a href="../guides/setup.html" class="btn primary">Go to Setup Guide</a>
+                        <a href="design.html" class="btn secondary" style="margin-left: 10px;">View Architecture</a>
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Ansible Implementation</strong> - Enterprise MSSQL Deployment</p>
+        <p>Complete playbooks, roles, and orchestration configurations</p>
+    </footer>
+</body>
+</html>

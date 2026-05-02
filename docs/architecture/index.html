@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Diagrams - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">🏗️ Architecture Diagrams</div>
+                <div class="header-subtitle">System architecture and data flow visualization</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="index.html">Architecture</a>
+                <a href="diagrams.html">Diagrams</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>🏗️ Architecture</h3>
+            <ul>
+                <li><a href="index.html" class="active">Overview</a></li>
+                <li><a href="diagrams.html">10 Diagrams</a></li>
+            </ul>
+
+            <h3>📊 Diagrams</h3>
+            <ul>
+                <li><a href="diagrams.html#diagram1">1. Overall System</a></li>
+                <li><a href="diagrams.html#diagram2">2. Ansible Architecture</a></li>
+                <li><a href="diagrams.html#diagram3">3. FastAPI Service</a></li>
+                <li><a href="diagrams.html#diagram4">4. Backup/Restore</a></li>
+                <li><a href="diagrams.html#diagram5">5. Request Flow</a></li>
+                <li><a href="diagrams.html#diagram6">6. Task Execution</a></li>
+                <li><a href="diagrams.html#diagram7">7. Health Check</a></li>
+                <li><a href="diagrams.html#diagram8">8. Configuration</a></li>
+                <li><a href="diagrams.html#diagram9">9. Error Handling</a></li>
+                <li><a href="diagrams.html#diagram10">10. VM Connectivity</a></li>
+            </ul>
+
+            <h3>📖 Other</h3>
+            <ul>
+                <li><a href="../guides/setup.html">Setup Guide</a></li>
+                <li><a href="../guides/delivery.html">Delivery Summary</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>Architecture Overview</h1>
+
+                <div class="alert info">
+                    <strong>📊 10 Diagrams Available</strong> - Complete system architecture and data flows
+                </div>
+
+                <h2>What Is Included</h2>
+                <p>
+                    This section contains 10 comprehensive system architecture diagrams that visualize:
+                </p>
+                <ul>
+                    <li>Overall system components and workflows</li>
+                    <li>Ansible deployment orchestration</li>
+                    <li>FastAPI service architecture</li>
+                    <li>Backup and restore data flows</li>
+                    <li>Request/response sequences</li>
+                    <li>Deployment task execution phases</li>
+                    <li>Health check procedures</li>
+                    <li>Configuration management hierarchy</li>
+                    <li>Error handling and retry logic</li>
+                    <li>VM connectivity verification</li>
+                </ul>
+
+                <h2>Why Architecture Diagrams Matter</h2>
+                <p>
+                    Understanding system architecture is crucial for:
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                    <div class="card">
+                        <h4>🎯 Deployment Planning</h4>
+                        <p>See how all components fit together before deployment</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔧 Troubleshooting</h4>
+                        <p>Understand data flows to debug issues quickly</p>
+                    </div>
+                    <div class="card">
+                        <h4>📚 Learning</h4>
+                        <p>Visual representation helps understand complex systems</p>
+                    </div>
+                    <div class="card">
+                        <h4>✅ Verification</h4>
+                        <p>Validate that your deployment matches the design</p>
+                    </div>
+                </div>
+
+                <h2>Diagram Categories</h2>
+
+                <h3>System & Infrastructure (Diagrams 1-3)</h3>
+                <p>
+                    These diagrams show the overall system components, how Ansible orchestrates deployment, 
+                    and how FastAPI provides API-based deployment.
+                </p>
+
+                <h3>Data & Execution Flow (Diagrams 4-6)</h3>
+                <p>
+                    These diagrams illustrate how data moves through the system, how API requests are handled, 
+                    and how deployment tasks are executed sequentially.
+                </p>
+
+                <h3>Operations & Monitoring (Diagrams 7-10)</h3>
+                <p>
+                    These diagrams show health monitoring, configuration management, error handling, 
+                    and VM connectivity verification.
+                </p>
+
+                <h2>How to Use These Diagrams</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 1: Start with Overall System (Diagram 1)</h4>
+                            <p>Get the high-level view of all components and how they connect</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 2: Choose Your Approach</h4>
+                            <p>Look at Diagram 2 (Ansible) or Diagram 3 (FastAPI)</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 3: Understand Data Flow</h4>
+                            <p>Review Diagrams 4-6 to see how your data and requests move</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 4: Plan for Operations</h4>
+                            <p>Study Diagrams 7-10 for monitoring, configuration, and troubleshooting</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Key Symbols & Colors</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol/Color</th>
+                            <th>Meaning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="component primary">📦 Blue</span></td>
+                            <td>Input, request, or client layer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="component success">🖥️ Green</span></td>
+                            <td>Success, completion, or operational component</td>
+                        </tr>
+                        <tr>
+                            <td><span class="component warning">⚙️ Orange</span></td>
+                            <td>Processing, transfer, or middleware</td>
+                        </tr>
+                        <tr>
+                            <td><span class="component error">❌ Red</span></td>
+                            <td>Error, failure, or warning state</td>
+                        </tr>
+                        <tr>
+                            <td><span class="component info">📊 Cyan</span></td>
+                            <td>Data, configuration, or monitoring</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Diagram Complexity Levels</h2>
+
+                <div class="card">
+                    <h4>🟢 Simple (Diagrams 1, 5, 7)</h4>
+                    <p>High-level overview suitable for everyone</p>
+                </div>
+
+                <div class="card">
+                    <h4>🟡 Intermediate (Diagrams 2, 3, 4, 8)</h4>
+                    <p>Detailed but organized for understanding different aspects</p>
+                </div>
+
+                <div class="card">
+                    <h4>🔴 Complex (Diagrams 6, 9, 10)</h4>
+                    <p>Detailed process flows for technical planning</p>
+                </div>
+
+                <h2>Common Use Cases</h2>
+
+                <h3>I'm Planning My First Deployment</h3>
+                <p>
+                    Review Diagrams 1, 2 (or 3), and 5 to understand the deployment workflow 
+                    and which approach suits your needs.
+                </p>
+
+                <h3>I'm Troubleshooting a Problem</h3>
+                <p>
+                    Look at Diagram 4 (data flow), Diagram 9 (error handling), and 
+                    Diagram 10 (connectivity) to identify where the issue might be.
+                </p>
+
+                <h3>I Need to Monitor the System</h3>
+                <p>
+                    Study Diagram 7 (health checks) to understand what metrics and 
+                    checks are being performed.
+                </p>
+
+                <h3>I Need to Customize Configuration</h3>
+                <p>
+                    Review Diagram 8 (configuration hierarchy) to understand how variables 
+                    are merged and which takes precedence.
+                </p>
+
+                <h2>Next Steps</h2>
+
+                <p>
+                    Ready to see the diagrams? 
+                    <a href="diagrams.html" class="btn primary">View All 10 Diagrams</a>
+                </p>
+
+                <p>
+                    Or jump to a specific diagram:
+                </p>
+                <ul>
+                    <li><a href="diagrams.html#diagram1">1. Overall System Architecture</a></li>
+                    <li><a href="diagrams.html#diagram4">4. Backup and Restore Data Flow</a></li>
+                    <li><a href="diagrams.html#diagram5">5. Request/Response Flow</a></li>
+                    <li><a href="diagrams.html#diagram9">9. Error Handling Flow</a></li>
+                </ul>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Architecture Diagrams</strong> - MSSQL Deployment System Design</p>
+        <p>10 comprehensive diagrams | Text-based for token efficiency</p>
+    </footer>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</body>
+</html>

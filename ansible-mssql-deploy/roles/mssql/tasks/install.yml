@@ -1,0 +1,113 @@
+---
+# Install MSSQL Server on Linux
+
+- name: Install required dependencies
+  yum:
+    name:
+      - curl
+      - wget
+      - gnupg
+      - libsodium
+    state: present
+  tags:
+    - install
+    - dependencies
+
+- name: Add Microsoft SQL Server repository key
+  rpm_key:
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+  tags:
+    - install
+    - repo
+
+- name: Add Microsoft SQL Server repository (CentOS 8)
+  yum_repository:
+    name: mssql-server
+    description: Microsoft SQL Server Repository
+    baseurl: https://packages.microsoft.com/rhel/8/mssql-server-{{ mssql_version }}/
+    gpgcheck: yes
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+    enabled: yes
+  tags:
+    - install
+    - repo
+
+- name: Add Microsoft MSSQL-Tools repository (CentOS 8)
+  yum_repository:
+    name: mssql-tools
+    description: Microsoft MSSQL-Tools Repository
+    baseurl: https://packages.microsoft.com/rhel/8/prod/
+    gpgcheck: yes
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+    enabled: yes
+  tags:
+    - install
+    - repo
+
+- name: Install MSSQL Server
+  yum:
+    name: mssql-server
+    state: present
+  tags:
+    - install
+    - mssql
+
+- name: Install MSSQL Tools (sqlcmd)
+  yum:
+    name: mssql-tools
+    state: present
+  environment:
+    ACCEPT_EULA: "Y"
+  tags:
+    - install
+    - tools
+
+- name: Run MSSQL setup/configuration
+  shell: |
+    MSSQL_SA_PASSWORD='{{ sa_password }}' \
+    MSSQL_PID='{{ mssql_edition }}' \
+    /opt/mssql/bin/mssql-conf -n setup accept-eula
+  args:
+    creates: /var/opt/mssql/.setup_done
+  environment:
+    ACCEPT_EULA: "Y"
+    MSSQL_SA_PASSWORD: "{{ sa_password }}"
+    MSSQL_PID: "{{ mssql_edition }}"
+  tags:
+    - install
+    - setup
+
+- name: Enable MSSQL Server service
+  systemd:
+    name: mssql-server
+    enabled: yes
+    state: started
+  tags:
+    - install
+    - service
+
+- name: Wait for SQL Server to start (up to 60 seconds)
+  wait_for:
+    port: "{{ mssql_port }}"
+    delay: 10
+    timeout: 60
+  tags:
+    - install
+    - service
+
+- name: Verify MSSQL installation
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT @@VERSION"
+  register: version_check
+  changed_when: false
+  tags:
+    - install
+    - verify
+
+- name: Display MSSQL version
+  debug:
+    var: version_check.stdout
+  tags:
+    - install
+    - verify

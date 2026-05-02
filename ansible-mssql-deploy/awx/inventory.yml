@@ -1,0 +1,36 @@
+---
+# AWX Inventory Configuration
+
+name: mssql-deployment-inventory
+description: Inventory for MSSQL Server deployment
+organization: Default
+variables:
+  ansible_connection: ssh
+  ansible_port: 22
+
+groups:
+  - name: mssql_servers
+    description: MSSQL Server hosts
+    variables:
+      mssql_version: "2019"
+      backup_dir: "/backup"
+      data_dir: "/var/opt/mssql/data"
+
+hosts:
+  - name: vm1
+    description: Primary MSSQL Server
+    variables:
+      ansible_host: 192.168.56.101
+      instance_name: instance1
+      backup_location: primary
+    groups:
+      - mssql_servers
+
+  - name: vm2
+    description: Secondary MSSQL Server
+    variables:
+      ansible_host: 192.168.56.102
+      instance_name: instance2
+      backup_location: secondary
+    groups:
+      - mssql_servers
