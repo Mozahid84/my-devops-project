@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Architecture - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">⚡ FastAPI Architecture</div>
+                <div class="header-subtitle">Lightweight API deployment design</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="readme.html">FastAPI</a>
+                <a href="design.html">Architecture</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>⚡ FastAPI</h3>
+            <ul>
+                <li><a href="readme.html">Quick Start</a></li>
+                <li><a href="design.html" class="active">Architecture</a></li>
+            </ul>
+
+            <h3>📖 Other</h3>
+            <ul>
+                <li><a href="../architecture/diagrams.html">System Diagrams</a></li>
+                <li><a href="../guides/setup.html">Setup Guide</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>⚡ FastAPI Architecture & Design</h1>
+
+                <div class="alert info">
+                    <strong>📊 Complete Design Document</strong> - Detailed architecture for lightweight API deployment
+                </div>
+
+                <h2>Architecture Overview</h2>
+
+                <p>
+                    The FastAPI approach provides a simple, modern REST API service for MSSQL deployment automation.
+                    It leverages FastAPI's async capabilities and integration with Ansible for deployment execution.
+                </p>
+
+                <h2>Key Design Principles</h2>
+
+                <h3>1. Asynchronous Design</h3>
+                <p>
+                    The API uses FastAPI's async/await patterns to handle long-running deployment tasks without blocking.
+                    Background tasks execute playbooks while the API remains responsive.
+                </p>
+
+                <h3>2. Separation of Concerns</h3>
+                <p>
+                    Routes are organized by functionality (deploy, health, logs), making the API modular and maintainable.
+                    The AnsibleRunner class handles Ansible execution separately.
+                </p>
+
+                <h3>3. Configuration Management</h3>
+                <p>
+                    Configuration uses Pydantic's BaseSettings for environment-based configuration.
+                    Supports .env files and environment variables with sensible defaults.
+                </p>
+
+                <h3>4. Health & Readiness Checks</h3>
+                <p>
+                    Comprehensive health checks verify Ansible availability, inventory access, disk space, and system resources.
+                    Enables safe deployment in containerized and orchestrated environments.
+                </p>
+
+                <h2>Core Components</h2>
+
+                <h3>FastAPI Application (main.py)</h3>
+
+                <p><strong>Purpose:</strong> Central FastAPI application with router configuration</p>
+
+                <ul>
+                    <li>App initialization with title and version</li>
+                    <li>Router registration (deploy, health, logs)</li>
+                    <li>Global exception handler</li>
+                    <li>Root endpoints for info and version</li>
+                </ul>
+
+                <h3>Configuration (config.py)</h3>
+
+                <p><strong>Purpose:</strong> Centralized configuration management</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Type</th>
+                            <th>Default</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ANSIBLE_INVENTORY</td>
+                            <td>Path</td>
+                            <td>../ansible-mssql-deploy/inventory/hosts.ini</td>
+                        </tr>
+                        <tr>
+                            <td>ANSIBLE_PLAYBOOK_DIR</td>
+                            <td>Path</td>
+                            <td>../ansible-mssql-deploy</td>
+                        </tr>
+                        <tr>
+                            <td>MSSQL_SA_PASSWORD</td>
+                            <td>String</td>
+                            <td>Password123!@#</td>
+                        </tr>
+                        <tr>
+                            <td>API_TIMEOUT</td>
+                            <td>Integer</td>
+                            <td>3600 (1 hour)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Ansible Runner (ansible_runner.py)</h3>
+
+                <p><strong>Purpose:</strong> Execute Ansible playbooks as subprocesses</p>
+
+                <ul>
+                    <li><strong>run_playbook():</strong> Execute playbook with parameters</li>
+                    <li><strong>validate_inventory():</strong> Parse and validate inventory</li>
+                    <li><strong>ping_hosts():</strong> Test connectivity to all hosts</li>
+                    <li><strong>get_inventory():</strong> Return inventory JSON</li>
+                    <li><strong>execution_history:</strong> Track all executions</li>
+                </ul>
+
+                <h2>API Routes & Endpoints</h2>
+
+                <h3>Deploy Routes (/api/v1/deploy)</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Response</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>POST</td>
+                            <td>/install</td>
+                            <td>202 Accepted</td>
+                            <td>Full deployment (install, configure, database)</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/backup</td>
+                            <td>202 Accepted</td>
+                            <td>Create backups and restore</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/install-tools</td>
+                            <td>202 Accepted</td>
+                            <td>Install tools only</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/restore-db</td>
+                            <td>202 Accepted</td>
+                            <td>Restore AdventureWorks</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/status</td>
+                            <td>200 OK</td>
+                            <td>Deployment configuration</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/hosts</td>
+                            <td>200 OK</td>
+                            <td>Inventory in JSON</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/history</td>
+                            <td>200 OK</td>
+                            <td>Execution history list</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/ping</td>
+                            <td>200 OK</td>
+                            <td>Test host connectivity</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Health Routes (/api/v1/health)</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Checks</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>/check</td>
+                            <td>Basic status</td>
+                            <td>Simple liveness probe</td>
+                        </tr>
+                        <tr>
+                            <td>/ready</td>
+                            <td>Ansible, inventory, disk, CPU, memory</td>
+                            <td>Readiness probe for deployment</td>
+                        </tr>
+                        <tr>
+                            <td>/live</td>
+                            <td>Service alive status</td>
+                            <td>Kubernetes liveness probe</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Log Routes (/api/v1/logs)</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Parameters</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>/latest</td>
+                            <td>lines=50</td>
+                            <td>Last N lines of logs</td>
+                        </tr>
+                        <tr>
+                            <td>/level/{level}</td>
+                            <td>level=INFO|WARNING|ERROR</td>
+                            <td>Filter by log level</td>
+                        </tr>
+                        <tr>
+                            <td>/since</td>
+                            <td>minutes=10</td>
+                            <td>Logs from last N minutes</td>
+                        </tr>
+                        <tr>
+                            <td>/clear</td>
+                            <td>—</td>
+                            <td>Clear log file</td>
+                        </tr>
+                        <tr>
+                            <td>/info</td>
+                            <td>—</td>
+                            <td>Log file statistics</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Request/Response Pattern</h2>
+
+                <h3>Background Task Execution</h3>
+
+                <p>
+                    Long-running operations use FastAPI's BackgroundTasks:
+                </p>
+
+                <ol>
+                    <li><strong>Client:</strong> Sends POST request to /deploy/install</li>
+                    <li><strong>API:</strong> Receives request, queues background task</li>
+                    <li><strong>API:</strong> Returns 202 Accepted immediately</li>
+                    <li><strong>Background:</strong> Task executes playbook in background</li>
+                    <li><strong>Client:</strong> Polls /logs/latest and /deploy/history</li>
+                    <li><strong>Client:</strong> Receives status updates</li>
+                </ol>
+
+                <h3>Response Format</h3>
+
+                <pre><code>{
+  "status": "initiated",
+  "task_id": "uuid",
+  "timestamp": "2026-04-19T10:30:00Z"
+}</code></pre>
+
+                <h2>Module Organization</h2>
+
+                <h3>app/routes/deploy.py</h3>
+
+                <p><strong>Provides:</strong> Deployment execution endpoints</p>
+
+                <ul>
+                    <li>POST endpoints for different deployment phases</li>
+                    <li>Background task management</li>
+                    <li>Execution history tracking</li>
+                    <li>Host connectivity testing</li>
+                </ul>
+
+                <h3>app/routes/health.py</h3>
+
+                <p><strong>Provides:</strong> Health check endpoints</p>
+
+                <ul>
+                    <li>Ansible availability check</li>
+                    <li>Inventory file access check</li>
+                    <li>Disk space verification</li>
+                    <li>CPU and memory monitoring</li>
+                </ul>
+
+                <h3>app/routes/logs.py</h3>
+
+                <p><strong>Provides:</strong> Log management and retrieval</p>
+
+                <ul>
+                    <li>Log file reading</li>
+                    <li>Log filtering by level</li>
+                    <li>Time-based filtering</li>
+                    <li>Log file statistics</li>
+                </ul>
+
+                <h2>Data Flow</h2>
+
+                <h3>Deployment Request Flow</h3>
+
+                <ol>
+                    <li><strong>HTTP POST:</strong> Client sends deployment request</li>
+                    <li><strong>FastAPI:</strong> Route handler receives request</li>
+                    <li><strong>Background Tasks:</strong> Add task to queue</li>
+                    <li><strong>HTTP 202:</strong> Return immediately</li>
+                    <li><strong>Subprocess:</strong> Execute ansible-playbook command</li>
+                    <li><strong>Ansible:</strong> Run playbook against targets</li>
+                    <li><strong>Logging:</strong> Write output to app.log</li>
+                    <li><strong>History:</strong> Store execution record</li>
+                </ol>
+
+                <h3>Status Monitoring Flow</h3>
+
+                <ol>
+                    <li><strong>HTTP GET:</strong> Client polls /logs/latest</li>
+                    <li><strong>FastAPI:</strong> Read log file</li>
+                    <li><strong>Response:</strong> Last N lines returned</li>
+                    <li><strong>HTTP GET:</strong> Client polls /deploy/history</li>
+                    <li><strong>FastAPI:</strong> Return execution history</li>
+                    <li><strong>Response:</strong> Status and results</li>
+                </ol>
+
+                <h2>Configuration Strategy</h2>
+
+                <h3>Loading Order</h3>
+
+                <ol>
+                    <li>Environment variables (highest priority)</li>
+                    <li>.env file (if exists)</li>
+                    <li>Hardcoded defaults (lowest priority)</li>
+                </ol>
+
+                <h3>Key Configuration Variables</h3>
+
+                <ul>
+                    <li>ANSIBLE_INVENTORY: Path to hosts.ini</li>
+                    <li>ANSIBLE_PLAYBOOK_DIR: Directory containing playbooks</li>
+                    <li>MSSQL_SA_PASSWORD: SA account password</li>
+                    <li>API_TIMEOUT: Execution timeout (seconds)</li>
+                    <li>LOG_DIR: Where to store logs</li>
+                </ul>
+
+                <h2>Error Handling</h2>
+
+                <h3>Exception Handling</h3>
+
+                <ul>
+                    <li><strong>FileNotFoundError:</strong> Missing inventory or playbook</li>
+                    <li><strong>TimeoutError:</strong> Deployment exceeds timeout</li>
+                    <li><strong>ConnectionError:</strong> SSH connectivity issues</li>
+                    <li><strong>ValidationError:</strong> Configuration issues</li>
+                </ul>
+
+                <h3>Graceful Degradation</h3>
+
+                <ul>
+                    <li>Health checks return detailed error messages</li>
+                    <li>Logs capture all errors for troubleshooting</li>
+                    <li>Execution history preserves failure information</li>
+                </ul>
+
+                <h2>Logging Strategy</h2>
+
+                <h3>Log Levels</h3>
+
+                <ul>
+                    <li><strong>DEBUG:</strong> Detailed diagnostic information</li>
+                    <li><strong>INFO:</strong> General operation information</li>
+                    <li><strong>WARNING:</strong> Warnings for potential issues</li>
+                    <li><strong>ERROR:</strong> Error conditions</li>
+                    <li><strong>CRITICAL:</strong> Critical errors</li>
+                </ul>
+
+                <h3>Log Output</h3>
+
+                <ul>
+                    <li>File: ./logs/app.log</li>
+                    <li>Format: Timestamp, level, message</li>
+                    <li>Rotation: When file exceeds size</li>
+                </ul>
+
+                <h2>Docker Integration</h2>
+
+                <h3>Dockerfile Strategy</h3>
+
+                <ul>
+                    <li>Python 3.11-slim base image</li>
+                    <li>Install Ansible and SSH</li>
+                    <li>Copy application code</li>
+                    <li>Expose port 8000</li>
+                    <li>Health check configured</li>
+                </ul>
+
+                <h3>Docker Compose</h3>
+
+                <ul>
+                    <li>Single service definition</li>
+                    <li>Volume mounts for SSH keys</li>
+                    <li>Environment variable passing</li>
+                    <li>Health check integration</li>
+                </ul>
+
+                <h2>Testing</h2>
+
+                <h3>Unit Tests (test_api.py)</h3>
+
+                <ul>
+                    <li>Root endpoint test</li>
+                    <li>API version test</li>
+                    <li>Health check test</li>
+                    <li>Status endpoint test</li>
+                </ul>
+
+                <h3>Running Tests</h3>
+
+                <pre><code>pytest tests/test_api.py -v
+pytest tests/test_api.py -v --cov=app</code></pre>
+
+                <h2>Security Considerations</h2>
+
+                <h3>Authentication</h3>
+
+                <ul>
+                    <li>API runs in trusted network (no auth by default)</li>
+                    <li>Can be extended with OAuth2 or API key</li>
+                </ul>
+
+                <h3>SSH Key Security</h3>
+
+                <ul>
+                    <li>SSH keys mounted read-only in Docker</li>
+                    <li>Permissions set to 600 (user only)</li>
+                    <li>Never logged or exposed</li>
+                </ul>
+
+                <h3>Password Management</h3>
+
+                <ul>
+                    <li>SA password passed via environment</li>
+                    <li>Never logged or exposed in responses</li>
+                    <li>Masked in execution output</li>
+                </ul>
+
+                <h2>Performance Optimization</h2>
+
+                <h3>Async Operations</h3>
+
+                <ul>
+                    <li>Background tasks don't block the API</li>
+                    <li>Multiple deployments can queue simultaneously</li>
+                    <li>Responsive UI/monitoring possible</li>
+                </ul>
+
+                <h3>Resource Management</h3>
+
+                <ul>
+                    <li>Disk space checks prevent failures</li>
+                    <li>Memory monitoring prevents OOM</li>
+                    <li>CPU utilization tracked</li>
+                </ul>
+
+                <h2>Scalability</h2>
+
+                <h3>Horizontal Scaling</h3>
+
+                <ul>
+                    <li>Multiple instances with shared Ansible inventory</li>
+                    <li>Load balancer for API endpoint</li>
+                    <li>Shared log storage for centralization</li>
+                </ul>
+
+                <h3>Limitations</h3>
+
+                <ul>
+                    <li>Single control machine for Ansible</li>
+                    <li>Execution history stored locally (use DB for persistence)</li>
+                </ul>
+
+                <h2>Future Enhancements</h2>
+
+                <ul>
+                    <li>Database-backed execution history</li>
+                    <li>Authentication/Authorization</li>
+                    <li>Webhook notifications</li>
+                    <li>Scheduled deployments</li>
+                    <li>Multiple playbook templates</li>
+                    <li>Advanced analytics dashboard</li>
+                </ul>
+
+                <div class="card success" style="margin-top: 30px;">
+                    <h3>✅ Architecture Complete</h3>
+                    <p>The FastAPI architecture provides a lightweight, modern, and scalable solution for MSSQL deployment automation.</p>
+                    <p style="margin-bottom: 0;">
+                        <a href="readme.html" class="btn primary">Back to FastAPI Guide</a>
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>FastAPI Architecture</strong> - Complete design document</p>
+        <p>Lightweight REST API for MSSQL deployment automation</p>
+    </footer>
+</body>
+</html>

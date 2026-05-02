@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">⚡ Quick Start (5 Minutes)</div>
+                <div class="header-subtitle">Get started in 5 minutes</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="quick-start.html">Quick Start</a>
+                <a href="setup.html">Setup</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>📋 Guides</h3>
+            <ul>
+                <li><a href="quick-start.html" class="active">Quick Start</a></li>
+                <li><a href="setup.html">Full Setup</a></li>
+                <li><a href="delivery.html">Delivery Info</a></li>
+            </ul>
+
+            <h3>🔧 Implementation</h3>
+            <ul>
+                <li><a href="../ansible/readme.html">Ansible</a></li>
+                <li><a href="../fastapi/readme.html">FastAPI</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>⚡ Quick Start</h1>
+
+                <div class="alert success">
+                    <strong>⏱️ 5 minutes to decision</strong> - Choose your approach and get started
+                </div>
+
+                <h2>Choose Your Path (1 minute)</h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div class="card highlight">
+                        <h3>🏢 Enterprise Team?</h3>
+                        <p>Need team collaboration, RBAC, and audit logs</p>
+                        <p><a href="../ansible/readme.html" class="btn primary" style="width: 100%; text-align: center;">Ansible</a></p>
+                    </div>
+
+                    <div class="card highlight">
+                        <h3>⚡ Small Team?</h3>
+                        <p>Need simple REST API and lightweight deployment</p>
+                        <p><a href="../fastapi/readme.html" class="btn primary" style="width: 100%; text-align: center;">FastAPI</a></p>
+                    </div>
+                </div>
+
+                <h2>Prerequisites (2 minutes)</h2>
+
+                <h3>What You Need</h3>
+                <ul>
+                    <li>✓ Two CentOS 8 / RHEL 8 VMs</li>
+                    <li>✓ SSH access to both VMs</li>
+                    <li>✓ 5GB+ disk space per VM</li>
+                    <li>✓ Control machine with Python 3.9+</li>
+                    <li>✓ Ansible 2.10+ (for Ansible approach)</li>
+                </ul>
+
+                <h3>IP Addresses</h3>
+                <p>Note the IP addresses of your VMs:</p>
+                <ul>
+                    <li><strong>VM1 (Primary):</strong> <code>192.168.56.101</code> (update with your IP)</li>
+                    <li><strong>VM2 (Secondary):</strong> <code>192.168.56.102</code> (update with your IP)</li>
+                </ul>
+
+                <h2>Setup SSH (2 minutes)</h2>
+
+                <h3>1. Generate SSH Key</h3>
+                <pre><code>ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""</code></pre>
+
+                <h3>2. Copy to Both VMs</h3>
+                <pre><code>ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.56.101
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.56.102</code></pre>
+
+                <h3>3. Test SSH Access</h3>
+                <pre><code>ssh -i ~/.ssh/id_rsa root@192.168.56.101
+exit
+ssh -i ~/.ssh/id_rsa root@192.168.56.102
+exit</code></pre>
+
+                <h2>Choose Your Solution</h2>
+
+                <h3>Option A: Ansible (Recommended for Teams)</h3>
+                <p>Follow these steps:</p>
+                <ol>
+                    <li>Go to <a href="../guides/setup.html">Setup Guide</a> (Complete setup)</li>
+                    <li>Then go to <a href="../ansible/readme.html">Ansible Guide</a> (Run deployment)</li>
+                </ol>
+
+                <h3>Option B: FastAPI (Recommended for Quick Setup)</h3>
+                <p>Follow these steps:</p>
+                <ol>
+                    <li>Go to <a href="../guides/setup.html">Setup Guide</a> (Complete setup)</li>
+                    <li>Then go to <a href="../fastapi/readme.html">FastAPI Guide</a> (Run API)</li>
+                </ol>
+
+                <h2>Verification Checklist</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SSH access to VM1</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>SSH access to VM2</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Disk space verified (5GB+)</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Python 3.9+ installed</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Ansible 2.10+ installed</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Deployment approach chosen</td>
+                            <td>☐</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>What Happens Next</h2>
+
+                <div class="card">
+                    <h4>Deployment (45-60 minutes)</h4>
+                    <ul>
+                        <li>MSSQL Server 2019 installed on both VMs</li>
+                        <li>AdventureWorks database restored</li>
+                        <li>10-stripe backup created on VM1</li>
+                        <li>Backup transferred and restored on VM2</li>
+                    </ul>
+                </div>
+
+                <h2>Recommended Reading Order</h2>
+
+                <ol>
+                    <li><a href="delivery.html">📦 Delivery Summary</a> (15 min) - What's included</li>
+                    <li><a href="../architecture/diagrams.html">🏗️ Architecture Diagrams</a> (20 min) - How it works</li>
+                    <li><a href="setup.html">📋 Setup Guide</a> (30 min) - Installation steps</li>
+                    <li><a href="../ansible/readme.html">🏢 Ansible</a> or <a href="../fastapi/readme.html">⚡ FastAPI</a> (Choose one)</li>
+                </ol>
+
+                <h2>Pro Tips</h2>
+
+                <ul>
+                    <li>💡 Use strong passwords (uppercase, lowercase, numbers, special chars)</li>
+                    <li>💡 Test SSH connectivity before deployment</li>
+                    <li>💡 Use dry-run mode with Ansible: <code>-C</code> flag</li>
+                    <li>💡 Monitor logs during first deployment</li>
+                    <li>💡 Keep SSH keys secure</li>
+                    <li>💡 Backup VMs before first deployment</li>
+                </ul>
+
+                <h2>Need Help?</h2>
+
+                <ul>
+                    <li>📖 <a href="setup.html#troubleshooting">Setup Guide - Troubleshooting</a></li>
+                    <li>🏗️ <a href="../architecture/diagrams.html">Architecture Diagrams</a></li>
+                    <li>🏢 <a href="../ansible/readme.html">Ansible Implementation</a></li>
+                    <li>⚡ <a href="../fastapi/readme.html">FastAPI Implementation</a></li>
+                </ul>
+
+                <h2>What to Do Now</h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+                    <div class="card success">
+                        <h3>Step 1: Setup</h3>
+                        <p>Follow the <a href="setup.html">Setup Guide</a></p>
+                        <p><strong>Time: 30 min</strong></p>
+                    </div>
+
+                    <div class="card success">
+                        <h3>Step 2: Deploy</h3>
+                        <p>Choose <a href="../ansible/readme.html">Ansible</a> or <a href="../fastapi/readme.html">FastAPI</a></p>
+                        <p><strong>Time: 45-60 min</strong></p>
+                    </div>
+                </div>
+
+                <div class="card info" style="margin-top: 30px;">
+                    <h3>✅ You're Ready!</h3>
+                    <p>All the tools and documentation are in place. Start with the Setup Guide and you'll have a working deployment in about 2 hours.</p>
+                    <p style="margin-bottom: 0;">
+                        <a href="setup.html" class="btn primary">Go to Setup Guide →</a>
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Quick Start</strong> - Get going in 5 minutes</p>
+        <p>Everything you need to make your first decision</p>
+    </footer>
+</body>
+</html>

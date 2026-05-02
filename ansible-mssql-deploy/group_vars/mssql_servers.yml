@@ -1,0 +1,16 @@
+---
+# Group Variables for MSSQL Servers
+
+# MSSQL Configuration
+mssql_version: "2019"
+mssql_port: 1433
+sa_password: "YourStr0ng!Passw0rd"  # CHANGE THIS!
+
+# Directories
+backup_dir: "/backup"
+data_dir: "/var/opt/mssql/data"
+log_dir: "/var/opt/mssql/log"
+
+# Database settings
+adventureworks_enabled: true
+backup_compression: true

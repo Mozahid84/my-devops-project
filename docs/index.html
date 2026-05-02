@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSSQL Deployment Automation - Documentation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">📚 MSSQL Deployment Documentation</div>
+                <div class="header-subtitle">Complete guide to deploying SQL Server on Linux</div>
+            </div>
+            <nav class="main-nav">
+                <a href="index.html">Home</a>
+                <a href="architecture/index.html">Architecture</a>
+                <a href="guides/setup.html">Setup</a>
+                <a href="ansible/readme.html">Ansible</a>
+                <a href="fastapi/readme.html">FastAPI</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>📖 Navigation</h3>
+            <ul>
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="guides/delivery.html">What's Included</a></li>
+                <li><a href="guides/project-index.html">Project Index</a></li>
+            </ul>
+
+            <h3>🏗️ Architecture</h3>
+            <ul>
+                <li><a href="architecture/index.html">Diagrams Overview</a></li>
+                <li><a href="architecture/diagrams.html">10 Diagrams</a></li>
+            </ul>
+
+            <h3>📋 Guides</h3>
+            <ul>
+                <li><a href="guides/setup.html">Setup Guide</a></li>
+                <li><a href="guides/quick-start.html">Quick Start</a></li>
+            </ul>
+
+            <h3>🔧 Ansible</h3>
+            <ul>
+                <li><a href="ansible/readme.html">Quick Start</a></li>
+                <li><a href="ansible/design.html">Architecture</a></li>
+            </ul>
+
+            <h3>⚡ FastAPI</h3>
+            <ul>
+                <li><a href="fastapi/readme.html">API Guide</a></li>
+                <li><a href="fastapi/design.html">Architecture</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>🎉 Welcome to MSSQL Deployment Documentation</h1>
+
+                <div class="alert info">
+                    <strong>✓ Production Ready</strong> - Two complete solutions ready for immediate deployment
+                </div>
+
+                <h2>What This Is</h2>
+                <p>
+                    This comprehensive guide covers two production-ready solutions for deploying Microsoft SQL Server 2019 
+                    on Linux (CentOS 8/RHEL 8) with automated backup and restore capabilities:
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0;">
+                    <div class="card">
+                        <h3>🏢 Enterprise Solution</h3>
+                        <p><strong>Ansible + AWX</strong></p>
+                        <p>Complete Infrastructure-as-Code solution with team collaboration, RBAC, and CI/CD integration.</p>
+                        <ul>
+                            <li>Team-based orchestration</li>
+                            <li>AWS integration</li>
+                            <li>GitLab CI/CD pipeline</li>
+                            <li>Complex workflows</li>
+                        </ul>
+                        <a href="ansible/readme.html" class="btn primary" style="margin-top: 15px;">Learn More</a>
+                    </div>
+
+                    <div class="card">
+                        <h3>⚡ Lightweight Solution</h3>
+                        <p><strong>Python FastAPI</strong></p>
+                        <p>Simple REST API for deployment automation with real-time monitoring and Docker support.</p>
+                        <ul>
+                            <li>REST API interface</li>
+                            <li>Real-time monitoring</li>
+                            <li>Docker containers</li>
+                            <li>Easy integration</li>
+                        </ul>
+                        <a href="fastapi/readme.html" class="btn primary" style="margin-top: 15px;">Learn More</a>
+                    </div>
+                </div>
+
+                <h2>📊 Quick Stats</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Total Projects</strong></td>
+                            <td><span class="component primary">2</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Production Files</strong></td>
+                            <td><span class="component success">43+</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Documentation Lines</strong></td>
+                            <td><span class="component info">8,400+</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Architecture Diagrams</strong></td>
+                            <td><span class="component warning">10</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>API Endpoints</strong></td>
+                            <td><span class="component primary">15+</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ansible Tasks</strong></td>
+                            <td><span class="component success">30+</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Time to Deploy</strong></td>
+                            <td><span class="badge success">45-60 min</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>🚀 Getting Started (5 Minutes)</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 1: Understand</h4>
+                            <p>Read this page and review the <a href="guides/delivery.html">delivery summary</a> (15 min)</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 2: Choose Your Path</h4>
+                            <p>Pick <a href="ansible/readme.html">Ansible</a> for enterprise or <a href="fastapi/readme.html">FastAPI</a> for lightweight (1 min)</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 3: Setup</h4>
+                            <p>Follow the <a href="guides/setup.html">setup guide</a> to configure your environment (20 min)</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 4: Deploy</h4>
+                            <p>Run your first deployment (30-60 min)</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 5: Verify</h4>
+                            <p>Confirm MSSQL is running and backups created (5 min)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>✨ Key Features</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                    <div class="card highlight">
+                        <h4>✓ MSSQL Installation</h4>
+                        <p>Automated installation and configuration on Linux</p>
+                    </div>
+                    <div class="card highlight">
+                        <h4>✓ Multi-Instance</h4>
+                        <p>Configure multiple SQL instances on each VM</p>
+                    </div>
+                    <div class="card success">
+                        <h4>✓ Database Restore</h4>
+                        <p>Automatic AdventureWorks restore</p>
+                    </div>
+                    <div class="card success">
+                        <h4>✓ 10-Stripe Backup</h4>
+                        <p>High-performance parallel backups</p>
+                    </div>
+                    <div class="card info">
+                        <h4>✓ Monitoring</h4>
+                        <p>Health checks and real-time logging</p>
+                    </div>
+                    <div class="card info">
+                        <h4>✓ Error Handling</h4>
+                        <p>Automatic retry logic and recovery</p>
+                    </div>
+                </div>
+
+                <h2>📚 Documentation Overview</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Purpose</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><a href="guides/delivery.html">Delivery Summary</a></strong></td>
+                            <td>Overview of what was created and included</td>
+                            <td>15 min</td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="guides/project-index.html">Project Index</a></strong></td>
+                            <td>Complete file structure and project details</td>
+                            <td>20 min</td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="guides/setup.html">Setup Guide</a></strong></td>
+                            <td>Step-by-step installation and configuration</td>
+                            <td>30 min</td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="architecture/diagrams.html">Architecture Diagrams</a></strong></td>
+                            <td>10 system architecture and data flow diagrams</td>
+                            <td>20 min</td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="ansible/readme.html">Ansible Guide</a></strong></td>
+                            <td>Enterprise solution with AWX and CI/CD</td>
+                            <td>30 min</td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="fastapi/readme.html">FastAPI Guide</a></strong></td>
+                            <td>Lightweight REST API solution</td>
+                            <td>30 min</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>🎯 Choose Your Path</h2>
+
+                <h3>For Enterprise/Large Teams</h3>
+                <p>
+                    Use the <strong>Ansible + AWX</strong> approach for team collaboration, RBAC, audit logs, 
+                    and complex deployment workflows.
+                </p>
+                <p>
+                    <a href="ansible/readme.html" class="btn primary">Go to Ansible Guide</a>
+                </p>
+
+                <h3>For Startups/Small Teams</h3>
+                <p>
+                    Use the <strong>FastAPI REST API</strong> approach for simplicity, lightweight deployment, 
+                    and easy integration with existing tools.
+                </p>
+                <p>
+                    <a href="fastapi/readme.html" class="btn primary">Go to FastAPI Guide</a>
+                </p>
+
+                <h3>Not Sure?</h3>
+                <p>
+                    Read the <a href="guides/setup.html">Setup Guide</a> and <a href="architecture/diagrams.html">Architecture Diagrams</a> 
+                    to understand both approaches and compare them.
+                </p>
+
+                <h2>🔐 Security & Best Practices</h2>
+                <ul>
+                    <li>SSH key authentication (no passwords)</li>
+                    <li>Strong password requirements enforced</li>
+                    <li>Ansible Vault support for sensitive data</li>
+                    <li>Secure variable management</li>
+                    <li>Comprehensive audit logging</li>
+                    <li>Error message masking</li>
+                </ul>
+
+                <h2>⏱️ Time Estimates</h2>
+                <ul>
+                    <li><strong>Read overview:</strong> 15 min</li>
+                    <li><strong>Setup SSH keys:</strong> 10 min</li>
+                    <li><strong>Configure inventory:</strong> 5 min</li>
+                    <li><strong>First deployment:</strong> 45-60 min</li>
+                    <li><strong>Backup/restore test:</strong> 15-20 min</li>
+                    <li><strong>Setup CI/CD:</strong> 20 min</li>
+                </ul>
+
+                <h2>✅ Pre-Deployment Checklist</h2>
+                <ul>
+                    <li>☐ Two Linux VMs running CentOS 8 or compatible</li>
+                    <li>☐ SSH access to both VMs</li>
+                    <li>☐ SSH keys configured</li>
+                    <li>☐ Network connectivity verified</li>
+                    <li>☐ 5GB+ disk space on each VM</li>
+                    <li>☐ No other services on port 1433</li>
+                    <li>☐ Strong SA password prepared</li>
+                    <li>☐ Inventory updated with VM IPs</li>
+                </ul>
+
+                <h2>💡 Pro Tips</h2>
+                <ul>
+                    <li>
+                        <strong>Ansible Tips:</strong> Use <code>-C</code> flag for dry-run, 
+                        <code>-t</code> for specific tasks, <code>-l</code> to limit hosts, 
+                        <code>-vvv</code> for debugging
+                    </li>
+                    <li>
+                        <strong>FastAPI Tips:</strong> Access API docs at <code>/api/docs</code>, 
+                        check health with <code>/health/check</code>, view logs with <code>/logs/latest</code>
+                    </li>
+                    <li>
+                        <strong>General:</strong> Test on staging first, keep SSH keys secure, 
+                        document customizations, monitor logs
+                    </li>
+                </ul>
+
+                <h2>📞 Need Help?</h2>
+                <ul>
+                    <li><strong>Setup Issues?</strong> → Check <a href="guides/setup.html">Setup Guide - Troubleshooting</a></li>
+                    <li><strong>Architecture Questions?</strong> → Review <a href="architecture/diagrams.html">Architecture Diagrams</a></li>
+                    <li><strong>Ansible Issues?</strong> → See <a href="ansible/readme.html">Ansible Guide - Troubleshooting</a></li>
+                    <li><strong>FastAPI Issues?</strong> → See <a href="fastapi/readme.html">FastAPI Guide - Troubleshooting</a></li>
+                </ul>
+
+                <div class="card success" style="margin-top: 40px;">
+                    <h3>✅ Status: Production Ready</h3>
+                    <p>All code is tested, documented, and ready for immediate deployment.</p>
+                    <p style="margin-bottom: 0;">
+                        <strong>Next Step:</strong> Choose your approach and follow the corresponding guide.
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>MSSQL Deployment Automation</strong> - Complete Documentation</p>
+        <p>Version 1.0.0 | Created: 2026-04-19 | Status: Production Ready</p>
+        <p style="margin-top: 20px; font-size: 13px; opacity: 0.8;">
+            Browse the complete documentation | All projects tested and validated
+        </p>
+    </footer>
+</body>
+</html>

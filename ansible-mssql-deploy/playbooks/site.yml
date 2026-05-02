@@ -1,0 +1,62 @@
+---
+# Main playbook - deploy MSSQL on all servers
+
+- name: Deploy MSSQL Server and AdventureWorks Database
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+  
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg: |
+          Deploying MSSQL Server to {{ inventory_hostname }}
+          Instance: {{ instance_name }}
+          IP Address: {{ ansible_host }}
+          OS: {{ ansible_os_family }}
+      tags:
+        - always
+
+    - name: Validate system requirements
+      assert:
+        that:
+          - ansible_os_family == "RedHat"
+          - ansible_distribution_major_version == "8"
+        fail_msg: "This role requires CentOS 8 or compatible"
+      tags:
+        - always
+
+  roles:
+    - role: mssql
+      tags:
+        - mssql
+        - install
+        - configure
+        - database
+
+  post_tasks:
+    - name: Display final status
+      debug:
+        msg: |
+          ✓ MSSQL Server deployment completed successfully!
+          Instance: {{ instance_name }}
+          Hostname: {{ inventory_hostname }}
+          Port: {{ mssql_port }}
+          Database: AdventureWorks installed
+      tags:
+        - always
+
+    - name: Create summary report
+      copy:
+        content: |
+          MSSQL Server Deployment Report
+          ================================
+          Deployment Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          Instance: {{ instance_name }}
+          MSSQL Version: {{ mssql_version }}
+          Edition: {{ mssql_edition }}
+          Status: SUCCESS
+        dest: /tmp/mssql_deployment_{{ inventory_hostname }}.txt
+      tags:
+        - always

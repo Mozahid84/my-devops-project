@@ -1,0 +1,72 @@
+stages:
+  - lint
+  - deploy
+
+variables:
+  ANSIBLE_HOST_KEY_CHECKING: "False"
+  ANSIBLE_FORCE_COLOR: "true"
+
+before_script:
+  - apt-get update && apt-get install -y ansible sshpass openssh-client
+  - mkdir -p ~/.ssh
+  - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+
+lint:
+  stage: lint
+  image: python:3.9
+  script:
+    - pip install ansible-lint
+    - ansible-lint playbooks/
+  only:
+    - merge_requests
+    - main
+  tags:
+    - docker
+
+syntax_check:
+  stage: lint
+  image: python:3.9
+  before_script:
+    - apt-get update && apt-get install -y ansible
+  script:
+    - ansible-playbook --syntax-check playbooks/site.yml
+    - ansible-playbook --syntax-check playbooks/backup.yml
+  only:
+    - merge_requests
+    - main
+  tags:
+    - docker
+
+deploy_mssql:
+  stage: deploy
+  image: python:3.9
+  script:
+    - pip install ansible
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - ansible-playbook -i inventory/hosts.ini playbooks/site.yml -v
+  environment:
+    name: production
+    url: http://vm1:1433
+  only:
+    - main
+  when: manual
+  tags:
+    - ssh
+
+deploy_backup:
+  stage: deploy
+  image: python:3.9
+  script:
+    - pip install ansible
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - ansible-playbook -i inventory/hosts.ini playbooks/backup.yml -v
+  environment:
+    name: production
+    url: http://vm1:1433
+  only:
+    - main
+  when: manual
+  needs: ["deploy_mssql"]
+  tags:
+    - ssh

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Guide - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">📋 Setup Guide</div>
+                <div class="header-subtitle">Step-by-step installation and configuration</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="setup.html">Setup</a>
+                <a href="../ansible/readme.html">Ansible</a>
+                <a href="../fastapi/readme.html">FastAPI</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>📋 Setup Guide</h3>
+            <ul>
+                <li><a href="setup.html" class="active">Full Guide</a></li>
+                <li><a href="quick-start.html">Quick Start</a></li>
+            </ul>
+
+            <h3>📖 Other Guides</h3>
+            <ul>
+                <li><a href="delivery.html">Delivery Summary</a></li>
+                <li><a href="project-index.html">Project Index</a></li>
+            </ul>
+
+            <h3>🔧 Implementation</h3>
+            <ul>
+                <li><a href="../ansible/readme.html">Ansible</a></li>
+                <li><a href="../fastapi/readme.html">FastAPI</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>📋 Complete Setup Guide</h1>
+
+                <div class="alert info">
+                    <strong>⏱️ Time: 30-40 minutes</strong> from start to first deployment
+                </div>
+
+                <h2>Prerequisites</h2>
+
+                <h3>Hardware Requirements</h3>
+                <ul>
+                    <li><strong>Control Machine:</strong> Windows 10/11 with WSL2 or Git Bash (or Linux/Mac)</li>
+                    <li><strong>Target VMs:</strong> Two CentOS 8 / RHEL 8 systems</li>
+                    <li><strong>Disk Space:</strong> 5GB+ per VM for MSSQL and backups</li>
+                    <li><strong>Network:</strong> All systems on same network segment</li>
+                    <li><strong>Memory:</strong> 2GB+ per VM (4GB+ recommended)</li>
+                </ul>
+
+                <h3>Software Requirements</h3>
+                <ul>
+                    <li><strong>Control Machine:</strong>
+                        <ul>
+                            <li>Python 3.9+</li>
+                            <li>Ansible 2.10+</li>
+                            <li>SSH client</li>
+                            <li>Git (optional)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Target VMs:</strong>
+                        <ul>
+                            <li>CentOS 8 / RHEL 8</li>
+                            <li>SSH server</li>
+                            <li>sudo access (or root)</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h2>Step 1: Prepare SSH Keys (5 minutes)</h2>
+
+                <h3>1.1 Generate SSH Keys</h3>
+                <p>On your control machine (Windows/Linux/Mac):</p>
+                <pre><code>ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""</code></pre>
+
+                <h3>1.2 Copy to Target VMs</h3>
+                <p>For each VM (vm1 at 192.168.56.101, vm2 at 192.168.56.102):</p>
+                <pre><code>ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.56.101
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.56.102</code></pre>
+
+                <div class="card highlight">
+                    <h4>⚠️ Ensure SSH Works</h4>
+                    <p>Test SSH access to each VM:</p>
+                    <pre><code>ssh -i ~/.ssh/id_rsa root@192.168.56.101
+exit
+ssh -i ~/.ssh/id_rsa root@192.168.56.102
+exit</code></pre>
+                </div>
+
+                <h2>Step 2: Setup Ansible (10 minutes)</h2>
+
+                <h3>2.1 Install Ansible</h3>
+                <pre><code># On Windows (WSL2/Git Bash)
+python -m pip install ansible==2.10.0
+
+# On Linux/Mac
+brew install ansible  # macOS
+sudo apt install ansible  # Ubuntu/Debian</code></pre>
+
+                <h3>2.2 Verify Installation</h3>
+                <pre><code>ansible --version</code></pre>
+
+                <h3>2.3 Update Inventory</h3>
+                <p>Edit <code>ansible-mssql-deploy/inventory/hosts.ini</code>:</p>
+                <pre><code>[mssql_servers]
+vm1 ansible_host=192.168.56.101 instance_name=instance1
+vm2 ansible_host=192.168.56.102 instance_name=instance2
+
+[mssql_servers:vars]
+ansible_user=root
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+ansible_python_interpreter=/usr/bin/python3</code></pre>
+
+                <h3>2.4 Test Ansible Connectivity</h3>
+                <pre><code>ansible all -i ansible-mssql-deploy/inventory/hosts.ini -m ping</code></pre>
+
+                <div class="card success">
+                    <h4>✅ Expected Output</h4>
+                    <pre><code>vm1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+vm2 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}</code></pre>
+                </div>
+
+                <h2>Step 3: Configure Variables (10 minutes)</h2>
+
+                <h3>3.1 Update Group Variables</h3>
+                <p>Edit <code>ansible-mssql-deploy/group_vars/mssql_servers.yml</code>:</p>
+                <pre><code>---
+mssql_version: 2019
+sa_password: "YourStrongPassword123!@#"  # Change this!
+mssql_port: 1433
+backup_dir: /backup/striped
+data_dir: /var/opt/mssql/data
+backup_location: primary</code></pre>
+
+                <h3>3.2 Update Host Variables for VM1</h3>
+                <p>Edit <code>ansible-mssql-deploy/host_vars/vm1.yml</code>:</p>
+                <pre><code>---
+instance_name: instance1
+backup_location: primary</code></pre>
+
+                <h3>3.3 Update Host Variables for VM2</h3>
+                <p>Edit <code>ansible-mssql-deploy/host_vars/vm2.yml</code>:</p>
+                <pre><code>---
+instance_name: instance2
+backup_location: secondary</code></pre>
+
+                <div class="card highlight">
+                    <h4>⚠️ Important: SA Password</h4>
+                    <p>
+                        Make sure to use a strong password that meets SQL Server requirements:
+                        <ul>
+                            <li>At least 8 characters</li>
+                            <li>Mix of uppercase, lowercase, numbers, and special characters</li>
+                        </ul>
+                    </p>
+                </div>
+
+                <h2>Step 4: Choose Your Deployment Method (1 minute)</h2>
+
+                <h3>Option A: Ansible Playbook (Enterprise)</h3>
+                <p>Use this for team environments with complex workflows.</p>
+                <pre><code>cd ansible-mssql-deploy
+ansible-playbook -i inventory/hosts.ini playbooks/site.yml</code></pre>
+
+                <h3>Option B: FastAPI REST API (Lightweight)</h3>
+                <p>Use this for simple, lightweight deployments with API control.</p>
+                <pre><code>cd python-fastapi-mssql
+python -m venv venv
+source venv/Scripts/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload</code></pre>
+
+                <h2>Step 5: Verify Prerequisites (5 minutes)</h2>
+
+                <h3>5.1 Check Disk Space on VMs</h3>
+                <pre><code>ansible all -i ansible-mssql-deploy/inventory/hosts.ini -m shell -a "df -h /"</code></pre>
+
+                <p>Verify that at least 5GB is available.</p>
+
+                <h3>5.2 Check Network Configuration</h3>
+                <pre><code>ansible all -i ansible-mssql-deploy/inventory/hosts.ini -m shell -a "hostname -I"</code></pre>
+
+                <h3>5.3 Test Port Availability</h3>
+                <pre><code>ansible all -i ansible-mssql-deploy/inventory/hosts.ini -m shell -a "netstat -tlnp | grep 1433 || echo 'Port 1433 is available'"</code></pre>
+
+                <h2>Troubleshooting</h2>
+
+                <h3>SSH Connection Issues</h3>
+                <div class="card">
+                    <h4>Problem: SSH key permission denied</h4>
+                    <p>Fix file permissions:</p>
+                    <pre><code>chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_rsa
+chmod 644 ~/.ssh/id_rsa.pub</code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>Problem: Host key verification failed</h4>
+                    <p>Add hosts to known_hosts:</p>
+                    <pre><code>ssh-keyscan -H 192.168.56.101 >> ~/.ssh/known_hosts
+ssh-keyscan -H 192.168.56.102 >> ~/.ssh/known_hosts</code></pre>
+                </div>
+
+                <h3>Ansible Issues</h3>
+                <div class="card">
+                    <h4>Problem: Ansible command not found</h4>
+                    <p>Reinstall Ansible:</p>
+                    <pre><code>python -m pip install --upgrade ansible</code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>Problem: Inventory file not found</h4>
+                    <p>Check file paths are correct and use absolute paths if needed.</p>
+                </div>
+
+                <h3>MSSQL Issues</h3>
+                <div class="card">
+                    <h4>Problem: Port 1433 already in use</h4>
+                    <p>Change MSSQL port in group_vars or check what's using the port:</p>
+                    <pre><code>netstat -tlnp | grep 1433</code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>Problem: SA password requirements not met</h4>
+                    <p>Use a strong password with uppercase, lowercase, numbers, and special characters.</p>
+                </div>
+
+                <h2>Verification Checklist</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Status</th>
+                            <th>Command to Test</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SSH connectivity to VM1</td>
+                            <td>☐</td>
+                            <td><code>ssh -i ~/.ssh/id_rsa root@192.168.56.101</code></td>
+                        </tr>
+                        <tr>
+                            <td>SSH connectivity to VM2</td>
+                            <td>☐</td>
+                            <td><code>ssh -i ~/.ssh/id_rsa root@192.168.56.102</code></td>
+                        </tr>
+                        <tr>
+                            <td>Ansible installed</td>
+                            <td>☐</td>
+                            <td><code>ansible --version</code></td>
+                        </tr>
+                        <tr>
+                            <td>Ansible ping works</td>
+                            <td>☐</td>
+                            <td><code>ansible all -i inventory/hosts.ini -m ping</code></td>
+                        </tr>
+                        <tr>
+                            <td>Disk space (5GB+)</td>
+                            <td>☐</td>
+                            <td><code>ansible all -i inventory/hosts.ini -m shell -a "df -h /"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Port 1433 available</td>
+                            <td>☐</td>
+                            <td><code>ansible all -i inventory/hosts.ini -m shell -a "netstat -tlnp | grep 1433"</code></td>
+                        </tr>
+                        <tr>
+                            <td>SA password set</td>
+                            <td>☐</td>
+                            <td>Check group_vars/mssql_servers.yml</td>
+                        </tr>
+                        <tr>
+                            <td>Inventory updated</td>
+                            <td>☐</td>
+                            <td>Check hosts.ini with correct IPs</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Ready to Deploy?</h2>
+
+                <p>Once all checklist items are complete, you're ready to deploy:</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div class="card">
+                        <h3>🏢 Ansible Approach</h3>
+                        <p><a href="../ansible/readme.html" class="btn primary" style="width: 100%; text-align: center;">Go to Ansible Guide</a></p>
+                    </div>
+                    <div class="card">
+                        <h3>⚡ FastAPI Approach</h3>
+                        <p><a href="../fastapi/readme.html" class="btn primary" style="width: 100%; text-align: center;">Go to FastAPI Guide</a></p>
+                    </div>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>Setup Guide</strong> - Complete installation instructions</p>
+        <p>Follow all steps in order for successful deployment</p>
+    </footer>
+</body>
+</html>

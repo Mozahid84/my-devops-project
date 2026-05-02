@@ -1,0 +1,30 @@
+wats---
+# Default variables for MSSQL role
+
+# SA Password - MUST be strong (min 8 chars, uppercase, lowercase, number, special char)
+sa_password: "YourStr0ng!Passw0rd"
+
+# MSSQL Edition: Developer, Express, Standard, Enterprise
+mssql_edition: "Developer"
+
+# MSSQL Version
+mssql_version: "2019"
+
+# Directories
+backup_dir: "/backup"
+data_dir: "/var/opt/mssql/data"
+log_dir: "/var/opt/mssql/log"
+
+# Network ports
+mssql_port: 1433
+
+# Tool path
+mssql_tools_path: "/opt/mssql-tools/bin"
+
+# Database restore options
+restore_replace: true
+restore_recovery: "RECOVERY"
+
+# Backup settings
+backup_compression: true
+backup_format: "FORMAT"

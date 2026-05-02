@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Implementation - MSSQL Deployment</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">⚡ FastAPI Implementation</div>
+                <div class="header-subtitle">Lightweight REST API for MSSQL deployment</div>
+            </div>
+            <nav class="main-nav">
+                <a href="../index.html">Home</a>
+                <a href="../ansible/readme.html">Ansible</a>
+                <a href="readme.html">FastAPI</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>⚡ FastAPI</h3>
+            <ul>
+                <li><a href="readme.html" class="active">Quick Start</a></li>
+                <li><a href="design.html">Architecture</a></li>
+            </ul>
+
+            <h3>🏢 Alternative</h3>
+            <ul>
+                <li><a href="../ansible/readme.html">Ansible</a></li>
+            </ul>
+
+            <h3>📖 Setup & Info</h3>
+            <ul>
+                <li><a href="../guides/setup.html">Setup Guide</a></li>
+                <li><a href="../architecture/diagrams.html">Diagrams</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <article>
+                <h1>⚡ FastAPI Implementation Guide</h1>
+
+                <div class="alert info">
+                    <strong>✓ Lightweight Solution</strong> - Simple REST API with Docker support and real-time monitoring
+                </div>
+
+                <h2>Overview</h2>
+
+                <p>
+                    The FastAPI approach provides a simple, lightweight REST API service for MSSQL deployment.
+                    It's perfect for teams that need:
+                </p>
+
+                <ul>
+                    <li>Simple REST API interface</li>
+                    <li>Easy integration with existing tools</li>
+                    <li>Docker containerization</li>
+                    <li>Real-time monitoring endpoints</li>
+                    <li>Quick setup and deployment</li>
+                    <li>Low operational overhead</li>
+                </ul>
+
+                <h2>Key Components</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                    <div class="card">
+                        <h4>⚡ FastAPI App</h4>
+                        <p><strong>main.py</strong> - Core application
+                            <br><strong>config.py</strong> - Configuration</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔧 Ansible Runner</h4>
+                        <p><strong>ansible_runner.py</strong> - Subprocess execution</p>
+                    </div>
+                    <div class="card">
+                        <h4>🛣️ Routes</h4>
+                        <p><strong>deploy.py</strong> - Deployment endpoints
+                            <br><strong>health.py</strong> - Health checks
+                            <br><strong>logs.py</strong> - Logging endpoints</p>
+                    </div>
+                    <div class="card">
+                        <h4>🐳 Docker</h4>
+                        <p>Dockerfile and docker-compose.yml for containerization</p>
+                    </div>
+                </div>
+
+                <h2>Quick Start (5 Minutes)</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 1: Navigate to Project</h4>
+                            <pre><code>cd python-fastapi-mssql</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 2: Create Virtual Environment</h4>
+                            <pre><code>python -m venv venv
+source venv/Scripts/activate  # Windows: venv\Scripts\activate</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 3: Install Dependencies</h4>
+                            <pre><code>pip install -r requirements.txt</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 4: Configure Environment</h4>
+                            <pre><code>cp .env.example .env
+# Edit .env with your configuration</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 5: Start Server</h4>
+                            <pre><code>uvicorn app.main:app --reload</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Step 6: Access API</h4>
+                            <p>Visit: <code>http://localhost:8000/api/docs</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Project Structure</h2>
+
+                <pre><code>python-fastapi-mssql/
+├── app/                        # Main application
+│   ├── __init__.py
+│   ├── main.py                # FastAPI app
+│   ├── config.py              # Configuration
+│   ├── ansible_runner.py      # Ansible integration
+│   └── routes/                # API routes
+│       ├── __init__.py
+│       ├── deploy.py          # Deployment endpoints
+│       ├── health.py          # Health checks
+│       └── logs.py            # Logging endpoints
+├── tests/                     # Unit tests
+│   ├── __init__.py
+│   └── test_api.py
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Container image
+├── docker-compose.yml         # Docker Compose
+├── run.sh                     # Startup script
+├── .env.example               # Environment template
+├── README.md                  # Quick start
+└── DESIGN.md                  # Architecture</code></pre>
+
+                <h2>API Endpoints</h2>
+
+                <h3>Root Endpoints</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/</td>
+                            <td>Service information</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/v1</td>
+                            <td>API version</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Deployment Endpoints (/deploy)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>POST</td>
+                            <td>/deploy/install</td>
+                            <td>Start full MSSQL deployment</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/deploy/backup</td>
+                            <td>Create 10-stripe backup on VM1</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/deploy/install-tools</td>
+                            <td>Install MSSQL tools only</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/deploy/restore-db</td>
+                            <td>Restore AdventureWorks database</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/deploy/status</td>
+                            <td>Get deployment status</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/deploy/hosts</td>
+                            <td>Get inventory hosts</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/deploy/history</td>
+                            <td>Get execution history</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/deploy/ping</td>
+                            <td>Test connectivity to hosts</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Health Check Endpoints (/health)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/health/check</td>
+                            <td>Basic health status</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/health/ready</td>
+                            <td>Readiness probe (all checks)</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/health/live</td>
+                            <td>Liveness probe</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Logging Endpoints (/logs)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/logs/latest</td>
+                            <td>Last N lines of logs</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/logs/level/{level}</td>
+                            <td>Filter logs by level</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/logs/since</td>
+                            <td>Logs from last N minutes</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/logs/clear</td>
+                            <td>Clear log file</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/logs/info</td>
+                            <td>Log file statistics</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Configuration</h2>
+
+                <h3>Environment Variables</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Default</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ANSIBLE_INVENTORY</td>
+                            <td>../ansible-mssql-deploy/inventory/hosts.ini</td>
+                            <td>Ansible inventory path</td>
+                        </tr>
+                        <tr>
+                            <td>ANSIBLE_PLAYBOOK_DIR</td>
+                            <td>../ansible-mssql-deploy</td>
+                            <td>Ansible playbooks directory</td>
+                        </tr>
+                        <tr>
+                            <td>MSSQL_SA_PASSWORD</td>
+                            <td>Password123!@#</td>
+                            <td>SA account password</td>
+                        </tr>
+                        <tr>
+                            <td>MSSQL_VERSION</td>
+                            <td>2019</td>
+                            <td>MSSQL version</td>
+                        </tr>
+                        <tr>
+                            <td>VM1_IP</td>
+                            <td>192.168.56.101</td>
+                            <td>Primary VM IP</td>
+                        </tr>
+                        <tr>
+                            <td>VM2_IP</td>
+                            <td>192.168.56.102</td>
+                            <td>Secondary VM IP</td>
+                        </tr>
+                        <tr>
+                            <td>API_TIMEOUT</td>
+                            <td>3600</td>
+                            <td>Request timeout (seconds)</td>
+                        </tr>
+                        <tr>
+                            <td>LOG_DIR</td>
+                            <td>./logs</td>
+                            <td>Log directory</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Usage Examples</h2>
+
+                <h3>Start Deployment</h3>
+                <pre><code>curl -X POST http://localhost:8000/api/v1/deploy/install</code></pre>
+
+                <h3>Check Health</h3>
+                <pre><code>curl http://localhost:8000/health/check</code></pre>
+
+                <h3>Get Execution History</h3>
+                <pre><code>curl http://localhost:8000/api/v1/deploy/history</code></pre>
+
+                <h3>View Latest Logs</h3>
+                <pre><code>curl http://localhost:8000/api/v1/logs/latest?lines=50</code></pre>
+
+                <h3>Test Host Connectivity</h3>
+                <pre><code>curl -X POST http://localhost:8000/api/v1/deploy/ping</code></pre>
+
+                <h2>Docker Deployment</h2>
+
+                <h3>Using Docker Compose (Recommended)</h3>
+                <pre><code># Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down</code></pre>
+
+                <h3>Using Docker Directly</h3>
+                <pre><code># Build image
+docker build -t mssql-fastapi .
+
+# Run container
+docker run -d -p 8000:8000 \
+  -e ANSIBLE_INVENTORY=/ansible/inventory/hosts.ini \
+  -e MSSQL_SA_PASSWORD=Password123!@# \
+  -v ~/.ssh:/root/.ssh:ro \
+  mssql-fastapi</code></pre>
+
+                <h2>Background Task Execution</h2>
+
+                <p>
+                    Deployment tasks run in the background and return immediately with a 202 Accepted response.
+                    Use the endpoints below to monitor progress:
+                </p>
+
+                <ul>
+                    <li><code>GET /logs/latest</code> - View current log output</li>
+                    <li><code>GET /deploy/history</code> - Check execution status</li>
+                    <li><code>GET /health/ready</code> - Verify system readiness</li>
+                </ul>
+
+                <h2>Health Checks</h2>
+
+                <h3>What Gets Checked</h3>
+                <ul>
+                    <li><strong>Ansible Availability:</strong> Is Ansible installed?</li>
+                    <li><strong>Inventory Access:</strong> Can we read the inventory file?</li>
+                    <li><strong>Disk Space:</strong> Is there ≥5GB available?</li>
+                    <li><strong>CPU Usage:</strong> Is CPU &lt;90%?</li>
+                    <li><strong>Memory Usage:</strong> Is memory &lt;90%?</li>
+                </ul>
+
+                <h3>Check Results</h3>
+                <pre><code>{
+  "healthy": true,
+  "details": {
+    "ansible_version": "2.10.0",
+    "inventory_accessible": true,
+    "disk_space_gb": 250,
+    "cpu_percent": 15.4,
+    "memory_percent": 45.2
+  }
+}</code></pre>
+
+                <h2>Logging</h2>
+
+                <h3>Log Levels</h3>
+                <ul>
+                    <li><strong>DEBUG:</strong> Detailed diagnostic information</li>
+                    <li><strong>INFO:</strong> General information messages</li>
+                    <li><strong>WARNING:</strong> Warning messages for potential issues</li>
+                    <li><strong>ERROR:</strong> Error messages for failures</li>
+                    <li><strong>CRITICAL:</strong> Critical errors requiring immediate action</li>
+                </ul>
+
+                <h3>Log File Location</h3>
+                <pre><code>./logs/app.log</code></pre>
+
+                <h2>Troubleshooting</h2>
+
+                <h3>Port Already in Use</h3>
+                <div class="card">
+                    <h4>Problem: Address already in use</h4>
+                    <p><strong>Solution:</strong> Change port or kill existing process</p>
+                    <pre><code>uvicorn app.main:app --port 8001
+# or
+lsof -i :8000 | grep LISTEN | awk '{print $2}' | xargs kill -9</code></pre>
+                </div>
+
+                <h3>Ansible Not Found</h3>
+                <div class="card">
+                    <h4>Problem: Ansible command not found</h4>
+                    <p><strong>Solution:</strong> Install Ansible in virtual environment</p>
+                    <pre><code>pip install ansible</code></pre>
+                </div>
+
+                <h3>Inventory File Not Found</h3>
+                <div class="card">
+                    <h4>Problem: Cannot find inventory file</h4>
+                    <p><strong>Solution:</strong> Update ANSIBLE_INVENTORY environment variable</p>
+                    <pre><code>export ANSIBLE_INVENTORY=/path/to/inventory/hosts.ini</code></pre>
+                </div>
+
+                <h2>Performance Tips</h2>
+
+                <ul>
+                    <li>Use <code>/health/ready</code> to verify system readiness before deployment</li>
+                    <li>Monitor <code>/logs/latest</code> during long-running deployments</li>
+                    <li>Check <code>/deploy/history</code> to see past execution results</li>
+                    <li>Use Docker for consistent environments</li>
+                    <li>Set appropriate timeouts for your environment</li>
+                </ul>
+
+                <h2>What Gets Deployed</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>VM1</th>
+                            <th>VM2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>MSSQL Server 2019</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>AdventureWorks DB</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>10x Striped Backup</td>
+                            <td>✓</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Restored DB</td>
+                            <td></td>
+                            <td>✓</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Next Steps</h2>
+
+                <ol>
+                    <li>Review the <a href="design.html">Architecture Design</a></li>
+                    <li>Follow the <a href="../guides/setup.html">Setup Guide</a></li>
+                    <li>Start the server: <code>uvicorn app.main:app --reload</code></li>
+                    <li>Visit API docs: <code>http://localhost:8000/api/docs</code></li>
+                    <li>Check health: <code>curl http://localhost:8000/health/ready</code></li>
+                    <li>Start deployment: <code>curl -X POST http://localhost:8000/api/v1/deploy/install</code></li>
+                </ol>
+
+                <div class="card success" style="margin-top: 30px;">
+                    <h3>✅ Ready to Deploy?</h3>
+                    <p>Follow the <a href="../guides/setup.html">Setup Guide</a> first, then start the FastAPI server.</p>
+                    <p style="margin-bottom: 0;">
+                        <a href="../guides/setup.html" class="btn primary">Go to Setup Guide</a>
+                        <a href="design.html" class="btn secondary" style="margin-left: 10px;">View Architecture</a>
+                    </p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer>
+        <p><strong>FastAPI Implementation</strong> - Lightweight MSSQL Deployment API</p>
+        <p>Complete REST API with Docker support</p>
+    </footer>
+</body>
+</html>

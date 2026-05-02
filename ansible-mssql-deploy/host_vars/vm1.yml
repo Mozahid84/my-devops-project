@@ -1,0 +1,5 @@
+---
+# VM1 Host Variables
+instance_name: instance1
+backup_location: primary
+mssql_edition: "Developer"

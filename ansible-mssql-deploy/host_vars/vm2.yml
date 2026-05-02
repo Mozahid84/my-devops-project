@@ -1,0 +1,5 @@
+---
+# VM2 Host Variables
+instance_name: instance2
+backup_location: secondary
+mssql_edition: "Developer"

@@ -1,0 +1,17 @@
+---
+# Main task file - orchestrates all role tasks
+
+- name: Include install tasks
+  include_tasks: install.yml
+
+- name: Include configure tasks
+  include_tasks: configure.yml
+
+- name: Include AdventureWorks install tasks
+  include_tasks: adventureworks.yml
+
+- name: Include backup tasks
+  include_tasks: backup.yml
+
+- name: Include restore tasks
+  include_tasks: restore.yml

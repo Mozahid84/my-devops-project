@@ -1,0 +1,24 @@
+---
+# Backup playbook - create striped backup on VM1
+
+- name: Create and transfer backups
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Show backup status
+      debug:
+        msg: "Processing {{ inventory_hostname }} for backups"
+
+    - name: Include backup tasks from role
+      include_role:
+        name: mssql
+        tasks_from: backup.yml
+      when: inventory_hostname == "vm1"
+
+    - name: Include restore tasks from role
+      include_role:
+        name: mssql
+        tasks_from: restore.yml
+      when: inventory_hostname == "vm2"
