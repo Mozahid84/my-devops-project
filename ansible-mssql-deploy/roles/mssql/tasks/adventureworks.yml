@@ -48,7 +48,6 @@
       REPLACE
     "
   register: restore_output
-  failed_when: false
   changed_when: "'restored' in restore_output.stdout"
   tags:
     - adventureworks
@@ -65,9 +64,10 @@
 
 - name: Verify AdventureWorks database exists
   shell: |
-    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT DB_ID('AdventureWorks') AS DBExists"
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT DB_ID('AdventureWorks')"
   register: db_check
   changed_when: false
+  failed_when: "'NULL' in db_check.stdout or db_check.stdout | trim == ''"
   tags:
     - adventureworks
     - database

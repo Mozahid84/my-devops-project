@@ -6,22 +6,28 @@ Main application entry point
 from fastapi import FastAPI, HTTPException, BackgroundTasks, status
 from fastapi.responses import JSONResponse
 import logging
-from typing import List, Optional
-import subprocess
-import json
-from datetime import datetime
+from pathlib import Path
 
 # Import routers
 from app.routes import deploy, health, logs
+from app.config import settings
 
 # Logging configuration
-logging.basicConfig(level=logging.INFO)
+Path(settings.LOG_DIR).mkdir(parents=True, exist_ok=True)
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    handlers=[
+        logging.FileHandler(Path(settings.LOG_DIR) / "app.log"),
+        logging.StreamHandler(),
+    ],
+)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
     title="MSSQL Deployment API",
-    description="FastAPI service for MSSQL deployment automation using Ansible",
+    description="FastAPI service for MSSQL deployment automation using native Python SSH",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",

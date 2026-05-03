@@ -1,0 +1,17 @@
+.env
+*.local
+*.bak
+*.pyc
+__pycache__/
+.pytest_cache/
+.uv-cache/
+.uv-python/
+venv/
+logs/
+backups/
+python-fastapi-mssql/logs/
+python-fastapi-mssql/backups/
+python-fastapi-mssql/venv/
+.vscode/
+.idea/
+id_rsa*

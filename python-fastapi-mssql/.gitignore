@@ -1,0 +1,12 @@
+.env
+logs/
+backups/
+venv/
+__pycache__/
+.pytest_cache/
+.uv-cache/
+.uv-python/
+*.pyc
+*.pyo
+*.bak
+id_rsa*

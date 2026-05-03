@@ -1,5 +1,10 @@
 # MSSQL FastAPI Deployment - Design Document
 
+> Note: The implementation has been refactored so FastAPI uses native Python SSH
+> via Paramiko instead of Ansible. This generated design document still contains
+> historical Ansible-runner detail and should be refreshed before relying on it
+> as the source of truth.
+
 ## Overview
 
 This document describes the architecture, design patterns, and implementation details of the Python FastAPI-based MSSQL Server deployment automation service.

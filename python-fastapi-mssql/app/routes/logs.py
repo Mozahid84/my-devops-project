@@ -122,16 +122,15 @@ async def get_logs_since(minutes: int = 30):
         with open(log_file, "r") as f:
             all_lines = f.readlines()
         
-        # Parse and filter by time (assumes ISO format timestamps)
         recent_lines = []
         for line in all_lines:
             try:
-                # Try to extract timestamp from log line
-                if "ISO" in line or "-" in line[:20]:
-                    # This is a heuristic - adjust based on your log format
+                timestamp = datetime.strptime(line[:19], "%Y-%m-%d %H:%M:%S")
+                if timestamp >= cutoff_time:
                     recent_lines.append(line)
-            except:
-                recent_lines.append(line)
+            except ValueError:
+                if recent_lines:
+                    recent_lines.append(line)
         
         return {
             "status": "success",

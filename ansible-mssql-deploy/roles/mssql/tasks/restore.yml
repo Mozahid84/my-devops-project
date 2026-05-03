@@ -2,10 +2,10 @@
 # Copy backup from VM1 to VM2 and restore
 
 - name: Fetch backup files from VM1
-  fetch:
+  synchronize:
     src: "{{ backup_dir }}/striped/"
     dest: "./backups/vm1_striped/"
-    flat: no
+    mode: pull
   when: inventory_hostname == "vm1"
   tags:
     - restore
@@ -25,7 +25,7 @@
 
 - name: Copy backup files to VM2
   copy:
-    src: "./backups/vm1_striped/vm1/{{ backup_dir }}/striped/"
+    src: "./backups/vm1_striped/"
     dest: "{{ backup_dir }}/striped/"
     mode: '0644'
   when: inventory_hostname == "vm2"
@@ -54,6 +54,17 @@
     - verify
     - vm2-only
 
+- name: Assert all striped backup files exist on VM2
+  assert:
+    that:
+      - backup_files_vm2.matched | int == 10
+    fail_msg: "Expected 10 striped backup files on VM2, found {{ backup_files_vm2.matched | default(0) }}"
+  when: inventory_hostname == "vm2"
+  tags:
+    - restore
+    - verify
+    - vm2-only
+
 - name: Restore 10-striped backup on VM2
   shell: |
     {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" << 'EOF'
@@ -73,7 +84,6 @@
     EOF
   when: inventory_hostname == "vm2"
   register: restore_result
-  failed_when: false
   changed_when: "'restored' in restore_result.stdout or 'Processed' in restore_result.stdout"
   tags:
     - restore
@@ -90,10 +100,11 @@
 
 - name: Verify database on VM2
   shell: |
-    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT DB_ID('AdventureWorks') AS DBExists"
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT DB_ID('AdventureWorks')"
   when: inventory_hostname == "vm2"
   register: db_verify_vm2
   changed_when: false
+  failed_when: "'NULL' in db_verify_vm2.stdout or db_verify_vm2.stdout | trim == ''"
   tags:
     - restore
     - verify

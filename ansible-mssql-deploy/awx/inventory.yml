@@ -20,7 +20,7 @@ hosts:
   - name: vm1
     description: Primary MSSQL Server
     variables:
-      ansible_host: 192.168.56.101
+      ansible_host: devops_VM1
       instance_name: instance1
       backup_location: primary
     groups:
@@ -29,7 +29,7 @@ hosts:
   - name: vm2
     description: Secondary MSSQL Server
     variables:
-      ansible_host: 192.168.56.102
+      ansible_host: devops_VM2
       instance_name: instance2
       backup_location: secondary
     groups:

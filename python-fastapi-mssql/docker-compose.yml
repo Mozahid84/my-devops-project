@@ -11,16 +11,18 @@ services:
     environment:
       - DEBUG=False
       - LOG_LEVEL=INFO
-      - ANSIBLE_INVENTORY=../ansible-mssql-deploy/inventory/hosts.ini
-      - ANSIBLE_PLAYBOOK_DIR=../ansible-mssql-deploy/playbooks
       - MSSQL_SA_PASSWORD=YourStr0ng!Passw0rd
       - MSSQL_VERSION=2019
       - MSSQL_EDITION=Developer
-      - VM1_IP=192.168.56.101
-      - VM2_IP=192.168.56.102
+      - VM1_HOST=devops_VM1
+      - VM2_HOST=devops_VM2
+      - VM1_USER=root
+      - VM2_USER=root
+      - SSH_KEY_PATH=/root/.ssh/id_rsa
+      - LOCAL_BACKUP_DIR=/app/backups/vm1_striped
     volumes:
       - ./logs:/app/logs
-      - ./ansible-mssql-deploy:/app/../ansible-mssql-deploy
+      - ./backups:/app/backups
       - ${HOME}/.ssh:/root/.ssh:ro
     networks:
       - mssql-network

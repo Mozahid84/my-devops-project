@@ -8,6 +8,7 @@
       - wget
       - gnupg
       - libsodium
+      - rsync
     state: present
   tags:
     - install
@@ -63,17 +64,24 @@
     - install
     - tools
 
+- name: Check whether MSSQL has already been configured
+  stat:
+    path: /var/opt/mssql/mssql.conf
+  register: mssql_config
+  tags:
+    - install
+    - setup
+
 - name: Run MSSQL setup/configuration
   shell: |
     MSSQL_SA_PASSWORD='{{ sa_password }}' \
     MSSQL_PID='{{ mssql_edition }}' \
     /opt/mssql/bin/mssql-conf -n setup accept-eula
-  args:
-    creates: /var/opt/mssql/.setup_done
   environment:
     ACCEPT_EULA: "Y"
     MSSQL_SA_PASSWORD: "{{ sa_password }}"
     MSSQL_PID: "{{ mssql_edition }}"
+  when: not mssql_config.stat.exists
   tags:
     - install
     - setup

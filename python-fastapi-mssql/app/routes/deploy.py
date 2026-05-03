@@ -1,37 +1,28 @@
 """Deployment routes"""
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
-from typing import Optional, List
 import logging
-from app.ansible_runner import AnsibleRunner
 from app.config import settings
-import os
+from app.python_deployer import PythonMssqlDeployer
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Initialize Ansible runner
-ansible_runner = AnsibleRunner(
-    inventory_path=settings.ANSIBLE_INVENTORY,
-    playbook_dir=settings.ANSIBLE_PLAYBOOK_DIR
-)
-
-
-class DeploymentRequest:
-    """Deployment request model"""
-    pass
+deployer = PythonMssqlDeployer()
 
 
 @router.get("/status")
 async def get_deployment_status():
     """Get current deployment status"""
+    history = deployer.get_history()
+    latest = history[0] if history else None
     return {
-        "status": "ready",
-        "inventory": settings.ANSIBLE_INVENTORY,
-        "playbook_dir": settings.ANSIBLE_PLAYBOOK_DIR,
+        "status": latest["status"] if latest else "ready",
+        "latest_task": latest,
+        "engine": "python-ssh",
         "mssql_version": settings.MSSQL_VERSION,
         "mssql_edition": settings.MSSQL_EDITION,
-        "vm1": settings.VM1_IP,
-        "vm2": settings.VM2_IP
+        "vm1": settings.VM1_HOST,
+        "vm2": settings.VM2_HOST
     }
 
 
@@ -46,29 +37,16 @@ async def deploy_install(background_tasks: BackgroundTasks):
     logger.info("Received deployment request - Install MSSQL")
     
     try:
-        # Run playbook in background
-        def run_deployment():
-            extra_vars = {
-                "sa_password": settings.MSSQL_SA_PASSWORD,
-                "mssql_version": settings.MSSQL_VERSION,
-                "mssql_edition": settings.MSSQL_EDITION
-            }
-            
-            result = ansible_runner.run_playbook(
-                playbook_name="site.yml",
-                extra_vars=extra_vars,
-                verbose=2
-            )
-            logger.info(f"Deployment completed: {result['status']}")
-        
-        background_tasks.add_task(run_deployment)
+        task_id = deployer.start_task("install")
+        background_tasks.add_task(deployer.deploy_install, task_id)
         
         return {
             "status": "initiated",
+            "task_id": task_id,
             "message": "MSSQL installation started",
-            "playbook": "site.yml",
+            "engine": "python-ssh",
             "estimated_duration_minutes": 45,
-            "instructions": "Check deployment status at /api/v1/deploy/status and logs at /api/v1/logs/latest"
+            "instructions": "Check /api/v1/deploy/status or /api/v1/deploy/history for progress"
         }
     
     except Exception as e:
@@ -90,19 +68,14 @@ async def deploy_backup(background_tasks: BackgroundTasks):
     logger.info("Received deployment request - Backup and Restore")
     
     try:
-        def run_backup():
-            result = ansible_runner.run_playbook(
-                playbook_name="backup.yml",
-                verbose=2
-            )
-            logger.info(f"Backup completed: {result['status']}")
-        
-        background_tasks.add_task(run_backup)
+        task_id = deployer.start_task("backup-restore")
+        background_tasks.add_task(deployer.deploy_backup_restore, task_id)
         
         return {
             "status": "initiated",
+            "task_id": task_id,
             "message": "Backup and restore process started",
-            "playbook": "backup.yml",
+            "engine": "python-ssh",
             "operations": [
                 "Create 10-stripe backup on VM1",
                 "Transfer backup files to VM2",
@@ -126,19 +99,14 @@ async def deploy_install_tools(background_tasks: BackgroundTasks):
     logger.info("Received deployment request - Install tools only")
     
     try:
-        def run_tools():
-            result = ansible_runner.run_playbook(
-                playbook_name="site.yml",
-                tags=["install", "tools"],
-                verbose=2
-            )
-            logger.info(f"Tools installation completed: {result['status']}")
-        
-        background_tasks.add_task(run_tools)
+        task_id = deployer.start_task("install-tools")
+        background_tasks.add_task(deployer.install_tools, task_id)
         
         return {
             "status": "initiated",
+            "task_id": task_id,
             "message": "MSSQL tools installation started",
+            "engine": "python-ssh",
             "components": ["mssql-tools", "sqlcmd"],
             "estimated_duration_minutes": 10
         }
@@ -158,19 +126,14 @@ async def deploy_restore_db(background_tasks: BackgroundTasks):
     logger.info("Received deployment request - Restore database")
     
     try:
-        def run_restore():
-            result = ansible_runner.run_playbook(
-                playbook_name="site.yml",
-                tags=["adventureworks"],
-                verbose=2
-            )
-            logger.info(f"Database restore completed: {result['status']}")
-        
-        background_tasks.add_task(run_restore)
+        task_id = deployer.start_task("restore-adventureworks")
+        background_tasks.add_task(deployer.restore_adventureworks, task_id)
         
         return {
             "status": "initiated",
+            "task_id": task_id,
             "message": "Database restore started",
+            "engine": "python-ssh",
             "database": "AdventureWorks",
             "operations": [
                 "Download AdventureWorks2019.bak",
@@ -191,7 +154,7 @@ async def deploy_restore_db(background_tasks: BackgroundTasks):
 async def get_deployment_history():
     """Get deployment execution history"""
     try:
-        history = ansible_runner.get_execution_history()
+        history = deployer.get_history()
         return {
             "total_executions": len(history),
             "executions": history
@@ -208,10 +171,11 @@ async def get_deployment_history():
 async def get_target_hosts():
     """Get target host information"""
     try:
-        inventory = ansible_runner.get_inventory()
+        inventory = deployer.get_hosts()
         return {
             "status": "success",
-            "inventory": inventory
+            "inventory": inventory,
+            "dns": deployer.resolve_hosts()
         }
     except Exception as e:
         logger.error(f"Error retrieving hosts: {str(e)}")
@@ -225,7 +189,7 @@ async def get_target_hosts():
 async def ping_hosts():
     """Ping all target hosts to verify connectivity"""
     try:
-        result = ansible_runner.ping_hosts()
+        result = deployer.ping_hosts()
         return result
     except Exception as e:
         logger.error(f"Error pinging hosts: {str(e)}")

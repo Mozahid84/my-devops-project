@@ -7,7 +7,7 @@
   job_type: run
   inventory: mssql-deployment-inventory
   project: mssql-deploy
-  playbook: playbooks/site.yml
+  playbook: ansible-mssql-deploy/playbooks/site.yml
   credential: mssql-ssh-credential
   become_enabled: true
   verbosity: 1
@@ -22,7 +22,7 @@
   job_type: run
   inventory: mssql-deployment-inventory
   project: mssql-deploy
-  playbook: playbooks/backup.yml
+  playbook: ansible-mssql-deploy/playbooks/backup.yml
   credential: mssql-ssh-credential
   become_enabled: true
   verbosity: 1

@@ -3,6 +3,7 @@ from fastapi import APIRouter, status
 from datetime import datetime
 import psutil
 import os
+from pathlib import Path
 
 router = APIRouter()
 
@@ -23,8 +24,9 @@ async def readiness_check():
     """Readiness check - verifies all dependencies"""
     
     checks = {
-        "ansible": verify_ansible(),
-        "inventory": verify_inventory(),
+        "python_ssh": verify_python_ssh(),
+        "ssh_key": verify_ssh_credentials(),
+        "vmware_dns": verify_vmware_dns(),
         "disk_space": check_disk_space(),
         "system_resources": check_system_resources()
     }
@@ -47,39 +49,61 @@ async def liveness_check():
     }
 
 
-def verify_ansible() -> dict:
-    """Verify Ansible is installed"""
+def verify_python_ssh() -> dict:
+    """Verify Paramiko is installed for Python SSH execution."""
     try:
-        import ansible
+        import paramiko
         return {
             "ready": True,
-            "component": "Ansible",
-            "version": ansible.__version__
+            "component": "Python SSH",
+            "library": "paramiko",
+            "version": paramiko.__version__
         }
     except ImportError:
         return {
             "ready": False,
-            "component": "Ansible",
-            "error": "Ansible not found"
+            "component": "Python SSH",
+            "error": "paramiko not found"
         }
 
 
-def verify_inventory() -> dict:
-    """Verify Ansible inventory exists"""
+def verify_ssh_credentials() -> dict:
+    """Verify either an SSH key or password is configured."""
     from app.config import settings
-    
-    if os.path.exists(settings.ANSIBLE_INVENTORY):
+
+    if settings.SSH_PASSWORD:
         return {
             "ready": True,
-            "component": "Inventory",
-            "path": settings.ANSIBLE_INVENTORY
+            "component": "SSH credentials",
+            "method": "password"
         }
-    else:
+
+    key_path = Path(os.path.expanduser(settings.SSH_KEY_PATH))
+    if key_path.exists():
         return {
-            "ready": False,
-            "component": "Inventory",
-            "error": f"Inventory not found at {settings.ANSIBLE_INVENTORY}"
+            "ready": True,
+            "component": "SSH credentials",
+            "method": "key",
+            "path": str(key_path)
         }
+
+    return {
+        "ready": False,
+        "component": "SSH credentials",
+        "error": f"SSH key not found at {key_path}; set SSH_KEY_PATH or SSH_PASSWORD"
+    }
+
+
+def verify_vmware_dns() -> dict:
+    """Verify VMware hostnames resolve from this API runtime."""
+    from app.routes.deploy import deployer
+
+    results = deployer.resolve_hosts()
+    return {
+        "ready": all(item["resolved"] for item in results.values()),
+        "component": "VMware DNS",
+        "hosts": results
+    }
 
 
 def check_disk_space() -> dict:

@@ -1,5 +1,9 @@
 # MSSQL Server Deployment - Python FastAPI
 
+This service uses native Python SSH execution through Paramiko. It does not call
+Ansible. Keep Ansible/AWX for the GitLab-driven infrastructure path, and use
+this API when you want lightweight REST operations directly from Python.
+
 ## Quick Start
 
 ```bash
@@ -15,7 +19,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Set environment variables
-export ANSIBLE_INVENTORY="../ansible-mssql-deploy/inventory/hosts.ini"
+export VM1_HOST="devops_VM1"
+export VM2_HOST="devops_VM2"
+export SSH_KEY_PATH="~/.ssh/id_rsa"
 export MSSQL_SA_PASSWORD="YourStr0ng!Passw0rd"
 
 # Run FastAPI server
@@ -46,7 +52,7 @@ python-fastapi-mssql/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI application
 │   ├── config.py            # Configuration settings
-│   ├── ansible_runner.py    # Ansible integration
+│   ├── python_deployer.py   # Native Python SSH deployment workflow
 │   └── routes/
 │       ├── __init__.py
 │       ├── deploy.py        # Deployment endpoints
@@ -204,21 +210,18 @@ curl -X POST http://localhost:8000/api/v1/logs/clear
 Create `.env` file from `.env.example`:
 
 ```bash
-# Ansible
-ANSIBLE_INVENTORY=../ansible-mssql-deploy/inventory/hosts.ini
-ANSIBLE_PLAYBOOK_DIR=../ansible-mssql-deploy/playbooks
-ANSIBLE_VAULT_PASSWORD=
-
 # MSSQL
 MSSQL_SA_PASSWORD=YourStr0ng!Passw0rd
 MSSQL_VERSION=2019
 MSSQL_EDITION=Developer
 
 # VMs
-VM1_IP=192.168.56.101
-VM2_IP=192.168.56.102
+VM1_HOST=devops_VM1
+VM2_HOST=devops_VM2
 VM1_USER=root
 VM2_USER=root
+SSH_KEY_PATH=~/.ssh/id_rsa
+SSH_PASSWORD=
 
 # Backup
 BACKUP_DIR=/backup
