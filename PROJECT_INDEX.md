@@ -1,5 +1,9 @@
 # MSSQL Deployment Automation - Project Index
 
+> Current setup note: start with `SETUP_GUIDE.md`. FastAPI now uses native
+> Python SSH via `app/python_deployer.py`; it no longer uses
+> `app/ansible_runner.py`.
+
 **Created**: 2026-04-19  
 **Version**: 1.0  
 **Status**: Production Ready  
@@ -74,7 +78,7 @@ API Documentation: `http://localhost:8000/api/docs`
 
 **Key Files:**
 - `app/main.py` - FastAPI application entry point
-- `app/ansible_runner.py` - Ansible integration
+- `app/python_deployer.py` - Native Python SSH deployment workflow
 - `app/routes/` - API endpoint routes
 - `Dockerfile` - Container image definition
 - `docker-compose.yml` - Multi-container orchestration
@@ -257,7 +261,7 @@ devops/
 │   ├── 📁 app/
 │   │   ├── main.py
 │   │   ├── config.py
-│   │   ├── ansible_runner.py
+│   │   ├── python_deployer.py
 │   │   ├── __init__.py
 │   │   └── 📁 routes/
 │   │       ├── deploy.py

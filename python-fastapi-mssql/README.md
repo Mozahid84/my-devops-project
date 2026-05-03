@@ -7,9 +7,9 @@ this API when you want lightweight REST operations directly from Python.
 ## Quick Start
 
 ```bash
-# Clone repository
-git clone https://gitlab.com/YOUR_USERNAME/python-fastapi-mssql.git
-cd python-fastapi-mssql
+# Clone the full repository
+git clone https://gitlab.com/mozahidhossaingitlab-group/my-devops-project.git
+cd my-devops-project/python-fastapi-mssql
 
 # Create virtual environment
 python -m venv venv
@@ -327,7 +327,9 @@ docker build -t mssql-api:1.0 .
 
 ```bash
 docker run -p 8000:8000 \
-  -e ANSIBLE_INVENTORY=/app/../ansible-mssql-deploy/inventory/hosts.ini \
+  -e VM1_HOST=devops_VM1 \
+  -e VM2_HOST=devops_VM2 \
+  -e SSH_KEY_PATH=/root/.ssh/id_rsa \
   -e MSSQL_SA_PASSWORD="YourStr0ng!Passw0rd" \
   -v ~/.ssh:/root/.ssh:ro \
   mssql-api:1.0
@@ -396,9 +398,9 @@ curl -X POST http://localhost:8000/api/v1/deploy/ping | jq
    └─ Return immediately (201 Accepted)
 
 3. Background Task
-   ├─ Initialize AnsibleRunner
-   ├─ Build playbook command
-   ├─ Execute playbook
+   ├─ Initialize Python SSH deployer
+   ├─ Connect to devops_VM1 and devops_VM2
+   ├─ Execute MSSQL workflow commands
    ├─ Log output
    └─ Complete
 
@@ -444,10 +446,11 @@ curl http://localhost:8000/api/v1/deploy/history | jq '
 
 ### SSH Keys
 
-Required for Ansible connectivity:
+Required for Python SSH connectivity:
 ```bash
 ssh-keygen -t rsa -b 4096
-ssh-copy-id -i ~/.ssh/id_rsa root@192.168.56.101
+ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM1
+ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM2
 ```
 
 Mount in Docker:
@@ -473,31 +476,24 @@ logs/
 
 ## Troubleshooting
 
-### "Playbook not found"
+### "Host not reachable"
 
 ```bash
-# Check inventory path
-export ANSIBLE_INVENTORY=/path/to/inventory/hosts.ini
-
-# Verify file exists
-ls -la /path/to/inventory/hosts.ini
+ping devops_VM1
+ping devops_VM2
 ```
 
-### "Ansible not found"
+### "Paramiko not found"
 
 ```bash
-# Install Ansible
-pip install ansible
-
-# Verify installation
-ansible --version
+pip install -r requirements.txt
 ```
 
 ### SSH Connection Fails
 
 ```bash
 # Test SSH connectivity
-ssh -i ~/.ssh/id_rsa root@192.168.56.101
+ssh -i ~/.ssh/id_rsa root@devops_VM1
 
 # Verify keys are mounted in Docker
 docker exec mssql-api ls -la /root/.ssh/

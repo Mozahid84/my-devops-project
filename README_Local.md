@@ -1,5 +1,10 @@
 # MSSQL Deployment Automation - Complete Solution
 
+> Current setup note: use `SETUP_GUIDE.md` first. It has been rewritten for the
+> actual GitLab repo, GitHub mirror, and VMware hosts `devops_AWX`,
+> `devops_VM1`, and `devops_VM2`. Some older generated sections below are kept
+> as background documentation.
+
 **Status**: ✅ Production Ready  
 **Created**: 2026-04-19  
 **Version**: 1.0.0  

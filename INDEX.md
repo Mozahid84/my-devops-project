@@ -1,5 +1,8 @@
 # 📚 MSSQL Deployment Projects - Documentation Index
 
+> Current setup note: use `SETUP_GUIDE.md` first. FastAPI now uses
+> `python-fastapi-mssql/app/python_deployer.py` instead of Ansible.
+
 **Location**: `c:\Users\mozy\devops\`  
 **Date Created**: 2026-04-19  
 **Status**: ✅ Production Ready
@@ -48,7 +51,7 @@ Detailed index of all files, documentation, and resources.
 
 **Key Files:**
 - `app/main.py` - FastAPI application
-- `app/ansible_runner.py` - Ansible integration
+- `app/python_deployer.py` - Native Python SSH deployment workflow
 - `app/routes/deploy.py` - Deployment endpoints
 - `Dockerfile` - Container configuration
 - `docker-compose.yml` - Docker Compose setup
