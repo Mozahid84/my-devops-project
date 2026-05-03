@@ -14,8 +14,8 @@ services:
       - MSSQL_SA_PASSWORD=YourStr0ng!Passw0rd
       - MSSQL_VERSION=2019
       - MSSQL_EDITION=Developer
-      - VM1_HOST=devops_VM1
-      - VM2_HOST=devops_VM2
+      - VM1_HOST=192.168.70.129
+      - VM2_HOST=192.168.70.130
       - VM1_USER=root
       - VM2_USER=root
       - SSH_KEY_PATH=/root/.ssh/id_rsa

@@ -15,11 +15,11 @@ https://github.com/Mozahid84/my-devops-project.git
 
 Three VMware Workstation Pro VMs:
 
-| VM | Role | Hostname |
-| --- | --- | --- |
-| AWX server | Runs AWX and pulls from GitLab | `devops_AWX` |
-| SQL VM 1 | Primary SQL Server target | `devops_VM1` |
-| SQL VM 2 | Secondary SQL Server target | `devops_VM2` |
+| VM | Role | Hostname | IP address |
+| --- | --- | --- | --- |
+| AWX server | Runs AWX and pulls from GitLab | `devops_AWX` | `192.168.70.128` |
+| SQL VM 1 | Primary SQL Server target | `devops_VM1` | `192.168.70.129` |
+| SQL VM 2 | Secondary SQL Server target | `devops_VM2` | `192.168.70.130` |
 
 Two deployment paths:
 
@@ -37,6 +37,8 @@ From `devops_AWX`, test name resolution:
 ```bash
 ping -c 2 devops_VM1
 ping -c 2 devops_VM2
+ping -c 2 192.168.70.129
+ping -c 2 192.168.70.130
 ```
 
 If those names do not resolve, add them to `/etc/hosts` on `devops_AWX`:
@@ -48,15 +50,16 @@ sudo nano /etc/hosts
 Add lines like this, using the actual VM IP addresses:
 
 ```text
-192.168.x.x devops_VM1
-192.168.x.x devops_VM2
+192.168.70.128 devops_AWX
+192.168.70.129 devops_VM1
+192.168.70.130 devops_VM2
 ```
 
 Then test SSH:
 
 ```bash
-ssh root@devops_VM1 "hostname"
-ssh root@devops_VM2 "hostname"
+ssh root@192.168.70.129 "hostname"
+ssh root@192.168.70.130 "hostname"
 ```
 
 ## Step 2: Configure SSH Access
@@ -70,15 +73,15 @@ ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa
 Copy the key to both target VMs:
 
 ```bash
-ssh-copy-id -i ~/.ssh/id_rsa.pub root@devops_VM1
-ssh-copy-id -i ~/.ssh/id_rsa.pub root@devops_VM2
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.70.129
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.70.130
 ```
 
 Test:
 
 ```bash
-ssh -i ~/.ssh/id_rsa root@devops_VM1 "echo VM1 OK"
-ssh -i ~/.ssh/id_rsa root@devops_VM2 "echo VM2 OK"
+ssh -i ~/.ssh/id_rsa root@192.168.70.129 "echo VM1 OK"
+ssh -i ~/.ssh/id_rsa root@192.168.70.130 "echo VM2 OK"
 ```
 
 ## Step 3: Push Code To GitLab And GitHub
@@ -142,8 +145,8 @@ mssql_servers
 Add hosts:
 
 ```ini
-vm1 ansible_host=devops_VM1 instance_name=instance1
-vm2 ansible_host=devops_VM2 instance_name=instance2
+vm1 ansible_host=192.168.70.129 instance_name=instance1 vmware_name=devops_VM1
+vm2 ansible_host=192.168.70.130 instance_name=instance2 vmware_name=devops_VM2
 ```
 
 Group variables for `mssql_servers`:
@@ -218,8 +221,8 @@ copy .env.example .env
 Edit `.env`:
 
 ```text
-VM1_HOST=devops_VM1
-VM2_HOST=devops_VM2
+VM1_HOST=192.168.70.129
+VM2_HOST=192.168.70.130
 VM1_USER=root
 VM2_USER=root
 SSH_KEY_PATH=~/.ssh/id_rsa
@@ -253,7 +256,7 @@ curl -X POST http://localhost:8000/api/v1/deploy/ping
 | --- | --- |
 | `SETUP_GUIDE.md` | Main simple setup guide |
 | `SETUP_VMWARE_GIT_AWX.md` | Extra GitLab/GitHub/AWX notes |
-| `ansible-mssql-deploy/inventory/hosts.ini` | Local Ansible inventory using `devops_VM1` and `devops_VM2` |
+| `ansible-mssql-deploy/inventory/hosts.ini` | Local Ansible inventory using `192.168.70.129` and `192.168.70.130` |
 | `ansible-mssql-deploy/awx/` | AWX reference config files |
 | `python-fastapi-mssql/app/python_deployer.py` | FastAPI native Python SSH deployment code |
 | `python-fastapi-mssql/.env.example` | FastAPI environment template |
@@ -269,13 +272,13 @@ Check GitLab project URL, credentials, and internet access from devops_AWX.
 If AWX cannot SSH:
 
 ```text
-Check the AWX Machine credential and SSH from devops_AWX to devops_VM1/devops_VM2.
+Check the AWX Machine credential and SSH from `192.168.70.128` to `192.168.70.129` and `192.168.70.130`.
 ```
 
 If hostnames do not resolve:
 
 ```text
-Add devops_VM1 and devops_VM2 to /etc/hosts on devops_AWX.
+Add `devops_VM1` and `devops_VM2` to `/etc/hosts` on `devops_AWX` using `192.168.70.129` and `192.168.70.130`.
 ```
 
 If SQL install fails:

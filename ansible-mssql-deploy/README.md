@@ -2,7 +2,8 @@
 
 > Current setup note: for your VMware environment, use the root
 > `SETUP_GUIDE.md`. This Ansible project is driven from AWX on `devops_AWX`
-> against `devops_VM1` and `devops_VM2`, with GitLab as the source repo.
+> (`192.168.70.128`) against `devops_VM1` (`192.168.70.129`) and
+> `devops_VM2` (`192.168.70.130`), with GitLab as the source repo.
 
 ## Quick Start
 
@@ -11,7 +12,7 @@
 git clone https://gitlab.com/mozahidhossaingitlab-group/my-devops-project.git
 cd my-devops-project/ansible-mssql-deploy
 
-# Inventory already uses devops_VM1 and devops_VM2
+# Inventory already uses the VMware NAT target IPs
 nano inventory/hosts.ini
 
 # Update SA password in group_vars/mssql_servers.yml
@@ -78,8 +79,8 @@ ansible-mssql-deploy/
 Edit `inventory/hosts.ini`:
 ```ini
 [mssql_servers]
-vm1 ansible_host=devops_VM1
-vm2 ansible_host=devops_VM2
+vm1 ansible_host=192.168.70.129 instance_name=instance1 vmware_name=devops_VM1
+vm2 ansible_host=192.168.70.130 instance_name=instance2 vmware_name=devops_VM2
 
 [mssql_servers:vars]
 ansible_user=root                 # SSH user
@@ -105,8 +106,8 @@ sa_password: "YourVeryStrong!Passw0rd"  # Must be strong!
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa
 
 # Copy key to VMs
-ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM1
-ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM2
+ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.129
+ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.130
 ```
 
 ## Usage

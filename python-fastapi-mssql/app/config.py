@@ -20,10 +20,9 @@ class Settings(BaseSettings):
     MSSQL_EDITION: str = os.getenv("MSSQL_EDITION", "Developer")
     MSSQL_PORT: int = int(os.getenv("MSSQL_PORT", "1433"))
     
-    # VMware target hostnames. These should resolve from the machine/container
-    # running the API, or be mapped through DNS/hosts entries.
-    VM1_HOST: str = os.getenv("VM1_HOST", os.getenv("VM1_IP", "devops_VM1"))
-    VM2_HOST: str = os.getenv("VM2_HOST", os.getenv("VM2_IP", "devops_VM2"))
+    # VMware NAT target addresses.
+    VM1_HOST: str = os.getenv("VM1_HOST", os.getenv("VM1_IP", "192.168.70.129"))
+    VM2_HOST: str = os.getenv("VM2_HOST", os.getenv("VM2_IP", "192.168.70.130"))
     VM1_USER: str = os.getenv("VM1_USER", "root")
     VM2_USER: str = os.getenv("VM2_USER", "root")
 

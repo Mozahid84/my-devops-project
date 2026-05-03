@@ -11,20 +11,28 @@ The FastAPI app no longer calls Ansible. It connects directly to the target VMs 
 
 Use these hostnames throughout the project:
 
-| VM | Purpose | Hostname |
-| --- | --- | --- |
-| AWX | Runs AWX and pulls from GitLab | `devops_AWX` |
-| VM1 | Primary SQL Server | `devops_VM1` |
-| VM2 | Secondary SQL Server | `devops_VM2` |
+| VM | Purpose | Hostname | IP address |
+| --- | --- | --- | --- |
+| AWX | Runs AWX and pulls from GitLab | `devops_AWX` | `192.168.70.128` |
+| VM1 | Primary SQL Server | `devops_VM1` | `192.168.70.129` |
+| VM2 | Secondary SQL Server | `devops_VM2` | `192.168.70.130` |
 
 From `devops_AWX`, confirm DNS/name resolution:
 
 ```bash
 ping -c 2 devops_VM1
 ping -c 2 devops_VM2
+ping -c 2 192.168.70.129
+ping -c 2 192.168.70.130
 ```
 
 If the names do not resolve, add them to `/etc/hosts` on `devops_AWX` and on the PC/container that runs FastAPI.
+
+```text
+192.168.70.128 devops_AWX
+192.168.70.129 devops_VM1
+192.168.70.130 devops_VM2
+```
 
 ## 2. Push To GitLab And GitHub
 
@@ -79,8 +87,8 @@ Create an inventory named `mssql-deployment-inventory` with:
 
 ```ini
 [mssql_servers]
-vm1 ansible_host=devops_VM1 instance_name=instance1
-vm2 ansible_host=devops_VM2 instance_name=instance2
+vm1 ansible_host=192.168.70.129 instance_name=instance1 vmware_name=devops_VM1
+vm2 ansible_host=192.168.70.130 instance_name=instance2 vmware_name=devops_VM2
 
 [mssql_servers:vars]
 ansible_user=root
@@ -119,8 +127,8 @@ cp .env.example .env
 Important values:
 
 ```text
-VM1_HOST=devops_VM1
-VM2_HOST=devops_VM2
+VM1_HOST=192.168.70.129
+VM2_HOST=192.168.70.130
 VM1_USER=root
 VM2_USER=root
 SSH_KEY_PATH=~/.ssh/id_rsa

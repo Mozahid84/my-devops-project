@@ -118,8 +118,8 @@ class Settings(BaseSettings):
     MSSQL_VERSION: str = "2019"
     
     # VMs
-    VM1_IP: str = "192.168.56.101"
-    VM2_IP: str = "192.168.56.102"
+    VM1_HOST: str = "192.168.70.129"
+    VM2_HOST: str = "192.168.70.130"
     
     # API
     API_TIMEOUT: int = 3600  # 1 hour
@@ -330,11 +330,11 @@ async def clear_logs():
     "_meta": {
         "hostvars": {
             "vm1": {
-                "ansible_host": "192.168.56.101",
+                "ansible_host": "192.168.70.129",
                 "instance_name": "instance1"
             },
             "vm2": {
-                "ansible_host": "192.168.56.102",
+                "ansible_host": "192.168.70.130",
                 "instance_name": "instance2"
             }
         }
@@ -523,7 +523,7 @@ inventory_vars = {
 **Setup:**
 ```bash
 ssh-keygen -t rsa -b 4096
-ssh-copy-id -i ~/.ssh/id_rsa root@192.168.56.101
+ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.129
 ```
 
 ### 2. Password Management

@@ -19,8 +19,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Set environment variables
-export VM1_HOST="devops_VM1"
-export VM2_HOST="devops_VM2"
+export VM1_HOST="192.168.70.129"
+export VM2_HOST="192.168.70.130"
 export SSH_KEY_PATH="~/.ssh/id_rsa"
 export MSSQL_SA_PASSWORD="YourStr0ng!Passw0rd"
 
@@ -216,8 +216,8 @@ MSSQL_VERSION=2019
 MSSQL_EDITION=Developer
 
 # VMs
-VM1_HOST=devops_VM1
-VM2_HOST=devops_VM2
+VM1_HOST=192.168.70.129
+VM2_HOST=192.168.70.130
 VM1_USER=root
 VM2_USER=root
 SSH_KEY_PATH=~/.ssh/id_rsa
@@ -327,8 +327,8 @@ docker build -t mssql-api:1.0 .
 
 ```bash
 docker run -p 8000:8000 \
-  -e VM1_HOST=devops_VM1 \
-  -e VM2_HOST=devops_VM2 \
+  -e VM1_HOST=192.168.70.129 \
+  -e VM2_HOST=192.168.70.130 \
   -e SSH_KEY_PATH=/root/.ssh/id_rsa \
   -e MSSQL_SA_PASSWORD="YourStr0ng!Passw0rd" \
   -v ~/.ssh:/root/.ssh:ro \
@@ -399,7 +399,7 @@ curl -X POST http://localhost:8000/api/v1/deploy/ping | jq
 
 3. Background Task
    ├─ Initialize Python SSH deployer
-   ├─ Connect to devops_VM1 and devops_VM2
+   ├─ Connect to 192.168.70.129 and 192.168.70.130
    ├─ Execute MSSQL workflow commands
    ├─ Log output
    └─ Complete
@@ -449,8 +449,8 @@ curl http://localhost:8000/api/v1/deploy/history | jq '
 Required for Python SSH connectivity:
 ```bash
 ssh-keygen -t rsa -b 4096
-ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM1
-ssh-copy-id -i ~/.ssh/id_rsa root@devops_VM2
+ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.129
+ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.130
 ```
 
 Mount in Docker:
@@ -479,8 +479,8 @@ logs/
 ### "Host not reachable"
 
 ```bash
-ping devops_VM1
-ping devops_VM2
+ping 192.168.70.129
+ping 192.168.70.130
 ```
 
 ### "Paramiko not found"
@@ -493,7 +493,7 @@ pip install -r requirements.txt
 
 ```bash
 # Test SSH connectivity
-ssh -i ~/.ssh/id_rsa root@devops_VM1
+ssh -i ~/.ssh/id_rsa root@192.168.70.129
 
 # Verify keys are mounted in Docker
 docker exec mssql-api ls -la /root/.ssh/
