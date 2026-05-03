@@ -137,7 +137,7 @@ graph TB
     CICD -->|provision| FastAPI
     
     AWX -->|ansible-playbook| Net
-    FastAPI -->|ansible-runner| Net
+    FastAPI -->|Python SSH| Net
     
     Net -->|target| VM1
     Net -->|target| VM2
@@ -223,7 +223,7 @@ graph TB
         Deploy["🚀 Deploy Routes"]
         Health["❤️ Health Routes"]
         Logs["📝 Log Routes"]
-        Runner["🎯 AnsibleRunner"]
+        Runner["🎯 PythonDeployer"]
     end
     
     subgraph Background["Background Processing"]
@@ -231,9 +231,9 @@ graph TB
         Tasks["⚙️ Background Tasks"]
     end
     
-    subgraph Ansible["Ansible Execution"]
-        Playbook["📋 Playbook Runner"]
-        Inventory["📝 Inventory"]
+    subgraph PythonSSH["Python SSH Execution"]
+        SSH["🔑 Paramiko SSH/SFTP"]
+        Commands["⌨️ MSSQL Commands"]
     end
     
     subgraph Targets["Target Infrastructure"]
@@ -255,14 +255,11 @@ graph TB
     
     Queue --> Tasks
     Tasks --> Runner
-    Runner --> Playbook
-    Runner --> Inventory
+    Runner --> SSH
+    SSH --> Commands
     
-    Playbook --> Ansible
-    Inventory --> Ansible
-    
-    Ansible --> V1
-    Ansible --> V2
+    Commands --> V1
+    Commands --> V2
                     </div>
                 </div>
 
@@ -316,7 +313,7 @@ sequenceDiagram
     participant Client as 🖥️ Client
     participant API as ⚡ FastAPI API
     participant Queue as 📦 Task Queue
-    participant Ansible as 🎯 Ansible
+    participant PythonSSH as 🎯 Python SSH
     participant Target as 🖥️ Target VMs
     
     Client->>API: POST /deploy/install
@@ -325,10 +322,10 @@ sequenceDiagram
     
     Note over Client: Returns immediately
     
-    Queue->>Ansible: Execute playbook
-    Ansible->>Target: Run tasks
-    Target-->>Ansible: Task output
-    Ansible-->>Queue: Execution complete
+    Queue->>PythonSSH: Start Python deployer
+    PythonSSH->>Target: Run SSH commands
+    Target-->>PythonSSH: Command output
+    PythonSSH-->>Queue: Execution complete
     Queue->>API: Store in history
     
     Note over Client: Client polls for status
@@ -504,8 +501,8 @@ graph TD
                     </div>
                     <div class="mermaid">
 graph LR
-    API["⚡ FastAPI<br/>POST /deploy/ping"] --> Cmd["⌨️ Build Command<br/>ansible all -i inventory -m ping"]
-    Cmd --> Exec["🚀 Execute<br/>subprocess.run"]
+    API["⚡ FastAPI<br/>POST /deploy/ping"] --> Cmd["⌨️ Build SSH check"]
+    Cmd --> Exec["🚀 Execute<br/>Paramiko connect"]
     Exec --> SSH1["🔑 SSH to VM1"]
     Exec --> SSH2["🔑 SSH to VM2"]
     
@@ -568,16 +565,17 @@ graph LR
                 mirrorActors: false
             },
             themeVariables: {
-                background: '#0b1220',
-                primaryColor: '#2563eb',
-                secondaryColor: '#22c55e',
-                tertiaryColor: '#38bdf8',
+                background: 'transparent',
+                primaryColor: '#1e293b',
+                secondaryColor: '#064e3b',
+                tertiaryColor: '#312e81',
                 lineColor: '#94a3b8',
                 mainBkg: '#111827',
-                primaryTextColor: '#e2e8f0',
-                secondaryTextColor: '#94a3b8',
-                tertiaryTextColor: '#bfdbfe',
-                border1: '#334155',
+                primaryTextColor: '#f8fafc',
+                secondaryTextColor: '#f8fafc',
+                tertiaryTextColor: '#f8fafc',
+                primaryBorderColor: '#38bdf8',
+                border1: '#475569',
                 border2: '#475569',
                 clusterBkg: '#111827',
                 clusterBorder: '#334155',
