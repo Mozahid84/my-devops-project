@@ -12,5 +12,5 @@ scm_clean: true
 scm_delete_on_update: false
 scm_update_on_launch: true
 scm_update_cache_timeout: 0
-credential: null
+credential: gitlab-ssh-credential
 local_path: _awx_my_devops_project
