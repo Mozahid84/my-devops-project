@@ -28,7 +28,7 @@
   verbosity: 1
   organization: Default
 
-# Workflow Template
+# Workflow Template gui way has a sub screen triggered after the initial screen is saved.
 - name: MSSQL-Complete-Workflow
   description: Complete MSSQL deployment workflow
   organization: Default
@@ -44,3 +44,4 @@
       success_nodes: []
       failure_nodes: []
       always_nodes: []
+
