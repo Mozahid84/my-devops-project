@@ -6,7 +6,7 @@ name: mssql-deploy
 description: MSSQL Server Installation and Configuration via Ansible
 organization: Default
 scm_type: git
-scm_url: "https://gitlab.com/mozahidhossaingitlab-group/my-devops-project.git"
+scm_url: "git@gitlab.com:mozahidhossaingitlab-group/my-devops-project.git"
 scm_branch: main
 scm_clean: true
 scm_delete_on_update: false
