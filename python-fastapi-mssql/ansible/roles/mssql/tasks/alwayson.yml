@@ -1,0 +1,60 @@
+---
+# Always On Availability Group configuration
+
+- name: Create Always On endpoint on each replica
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.database_mirroring_endpoints WHERE name = '{{ ag_endpoint_name }}')
+    CREATE ENDPOINT [{{ ag_endpoint_name }}]
+    STATE=STARTED
+    AS TCP (LISTENER_PORT = {{ ag_port }})
+    FOR DATA_MIRRORING (ROLE = ALL, AUTHENTICATION = WINDOWS NEGOTIATE)
+    "
+  register: endpoint_result
+  changed_when: "'created' in endpoint_result.stdout or 'already exists' in endpoint_result.stdout"
+  tags:
+    - alwayson
+
+- name: Create Availability Group on primary replica
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.availability_groups WHERE name = '{{ ag_name }}')
+    BEGIN
+      CREATE AVAILABILITY GROUP [{{ ag_name }}]
+      WITH (CLUSTER_TYPE = {{ ag_cluster_type }})
+      FOR DATABASE {{ ag_databases | join(', ') }}
+      REPLICA ON
+        N'{{ inventory_hostname }}' WITH (ENDPOINT_URL = N'tcp://{{ ansible_host }}:{{ ag_port }}', FAILOVER_MODE = {{ ag_failover_mode }}, AVAILABILITY_MODE = {{ ag_replica_mode }}, SEEDING_MODE = AUTOMATIC)
+    END
+    "
+  register: ag_result
+  changed_when: "'created' in ag_result.stdout or 'already exists' in ag_result.stdout"
+  when: inventory_hostname == 'vm1'
+  tags:
+    - alwayson
+
+- name: Join secondary replica to Availability Group
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.dm_hadr_availability_replica_states WHERE replica_server_name = '{{ inventory_hostname }}' AND role_desc = 'SECONDARY')
+    ALTER AVAILABILITY GROUP [{{ ag_name }}] JOIN
+    "
+  when: inventory_hostname == 'vm2'
+  register: join_result
+  changed_when: "'joined' in join_result.stdout or 'already exists' in join_result.stdout"
+  tags:
+    - alwayson
+
+- name: Verify Availability Group state
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT replica_server_name, role_desc, synchronization_state_desc FROM sys.dm_hadr_availability_replica_states"
+  register: verify_ag
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Display Availability Group verification
+  debug:
+    msg: "AG state: {{ verify_ag.stdout }}"
+  tags:
+    - alwayson

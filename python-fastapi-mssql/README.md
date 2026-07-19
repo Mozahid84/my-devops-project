@@ -1,35 +1,37 @@
 # MSSQL Server Deployment - Python FastAPI
 
-This service uses native Python SSH execution through Paramiko. It does not call
-Ansible. Keep Ansible/AWX for the GitLab-driven infrastructure path, and use
-this API when you want lightweight REST operations directly from Python.
+This service now uses an embedded Ansible workflow to install, back up, restore,
+and configure MSSQL across the VMware lab VMs. The FastAPI app exposes REST
+endpoints that trigger the Ansible playbooks and return lightweight status
+information for local testing and learning.
 
 ## Quick Start
 
 ```bash
-# Clone the full repository
+# Clone the repository
+cd /c/Users/mozy/devops
+
 git clone https://gitlab.com/mozahidhossaingitlab-group/my-devops-project.git
 cd my-devops-project/python-fastapi-mssql
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/Scripts/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set environment variables
-export VM1_HOST="192.168.70.129"
-export VM2_HOST="192.168.70.130"
-export SSH_KEY_PATH="~/.ssh/id_rsa"
-export MSSQL_SA_PASSWORD="YourStr0ng!Passw0rd"
+# Create environment file
+cp .env.example .env
 
 # Run FastAPI server
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Server runs at `http://localhost:8000`
 API docs at `http://localhost:8000/api/docs`
+
+For a full VMware test workflow, see [RUNBOOK.md](RUNBOOK.md).
 
 ## Alternative: Docker
 

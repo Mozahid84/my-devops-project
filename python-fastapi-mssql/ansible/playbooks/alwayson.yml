@@ -1,0 +1,25 @@
+---
+- name: Configure Always-On Availability Group for AdventureWorks
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Verify MSSQL connectivity on each replica
+      shell: |
+        {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT 1"
+      register: connectivity_check
+      retries: 10
+      delay: 5
+      until: connectivity_check.rc == 0
+      changed_when: false
+      tags:
+        - alwayson
+
+  tasks:
+    - name: Configure Always On endpoints and availability group
+      include_role:
+        name: mssql
+        tasks_from: alwayson.yml
+      tags:
+        - alwayson

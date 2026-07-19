@@ -1,0 +1,24 @@
+---
+# Default variables for embedded MSSQL Ansible role
+
+sa_password: "YourStr0ng!Passw0rd"
+mssql_edition: "Developer"
+mssql_version: "2019"
+backup_dir: "/backup"
+data_dir: "/var/opt/mssql/data"
+log_dir: "/var/opt/mssql/log"
+mssql_port: 1433
+mssql_tools_path: "/opt/mssql-tools/bin"
+restore_replace: true
+restore_recovery: "RECOVERY"
+backup_compression: true
+backup_format: "FORMAT"
+ag_name: "AG1"
+ag_listener: "ag-listener"
+ag_port: 5022
+ag_replica_mode: "SYNCHRONOUS_COMMIT"
+ag_databases:
+  - AdventureWorks
+ag_endpoint_name: "Hadr_endpoint"
+ag_cluster_type: "EXTERNAL"
+ag_failover_mode: "MANUAL"

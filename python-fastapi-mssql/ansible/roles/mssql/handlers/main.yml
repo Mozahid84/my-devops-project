@@ -1,0 +1,7 @@
+---
+# MSSQL service handlers
+
+- name: restart mssql service
+  systemd:
+    name: mssql-server
+    state: restarted

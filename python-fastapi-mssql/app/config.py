@@ -38,7 +38,14 @@ class Settings(BaseSettings):
     LOCAL_BACKUP_DIR: str = os.getenv("LOCAL_BACKUP_DIR", "./backups/vm1_striped")
     DATA_DIR: str = os.getenv("DATA_DIR", "/var/opt/mssql/data")
     MSSQL_LOG_DIR: str = os.getenv("MSSQL_LOG_DIR", "/var/opt/mssql/log")
-    
+
+    # Ansible Configuration
+    ANSIBLE_INVENTORY: str = os.getenv("ANSIBLE_INVENTORY", "./ansible/inventory/hosts.ini")
+    ANSIBLE_PLAYBOOK_DIR: str = os.getenv("ANSIBLE_PLAYBOOK_DIR", "./ansible/playbooks")
+    ANSIBLE_CMD: str = os.getenv("ANSIBLE_CMD", "ansible-playbook")
+    ANSIBLE_VERBOSE: int = int(os.getenv("ANSIBLE_VERBOSE", "1"))
+    ANSIBLE_PRIVATE_KEY_FILE: str = os.getenv("ANSIBLE_PRIVATE_KEY_FILE", "~/.ssh/id_rsa")
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_DIR: str = os.getenv("LOG_DIR", "./logs")

@@ -2,12 +2,12 @@
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 import logging
 from app.config import settings
-from app.python_deployer import PythonMssqlDeployer
+from app.deployer import AnsibleMssqlDeployer
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-deployer = PythonMssqlDeployer()
+deployer = AnsibleMssqlDeployer()
 
 
 @router.get("/status")
@@ -18,7 +18,7 @@ async def get_deployment_status():
     return {
         "status": latest["status"] if latest else "ready",
         "latest_task": latest,
-        "engine": "python-ssh",
+        "engine": "ansible",
         "mssql_version": settings.MSSQL_VERSION,
         "mssql_edition": settings.MSSQL_EDITION,
         "vm1": settings.VM1_HOST,
@@ -44,7 +44,8 @@ async def deploy_install(background_tasks: BackgroundTasks):
             "status": "initiated",
             "task_id": task_id,
             "message": "MSSQL installation started",
-            "engine": "python-ssh",
+            "engine": "ansible",
+            "playbook": "site.yml",
             "estimated_duration_minutes": 45,
             "instructions": "Check /api/v1/deploy/status or /api/v1/deploy/history for progress"
         }
@@ -75,7 +76,8 @@ async def deploy_backup(background_tasks: BackgroundTasks):
             "status": "initiated",
             "task_id": task_id,
             "message": "Backup and restore process started",
-            "engine": "python-ssh",
+            "engine": "ansible",
+            "playbook": "backup.yml",
             "operations": [
                 "Create 10-stripe backup on VM1",
                 "Transfer backup files to VM2",
@@ -106,7 +108,9 @@ async def deploy_install_tools(background_tasks: BackgroundTasks):
             "status": "initiated",
             "task_id": task_id,
             "message": "MSSQL tools installation started",
-            "engine": "python-ssh",
+            "engine": "ansible",
+            "playbook": "site.yml",
+            "tags": ["install", "tools"],
             "components": ["mssql-tools", "sqlcmd"],
             "estimated_duration_minutes": 10
         }
@@ -133,7 +137,9 @@ async def deploy_restore_db(background_tasks: BackgroundTasks):
             "status": "initiated",
             "task_id": task_id,
             "message": "Database restore started",
-            "engine": "python-ssh",
+            "engine": "ansible",
+            "playbook": "site.yml",
+            "tags": ["adventureworks"],
             "database": "AdventureWorks",
             "operations": [
                 "Download AdventureWorks2019.bak",
@@ -147,6 +153,36 @@ async def deploy_restore_db(background_tasks: BackgroundTasks):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to initiate database restore: {str(e)}"
+        )
+
+
+@router.post("/alwayson")
+async def deploy_alwayson(background_tasks: BackgroundTasks):
+    """Configure Always-On Availability Group across VM1 and VM2"""
+    logger.info("Received deployment request - Configure Always On")
+    try:
+        task_id = deployer.start_task("alwayson")
+        background_tasks.add_task(deployer.deploy_alwayson, task_id)
+
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "Always On availability group deployment started",
+            "engine": "ansible",
+            "playbook": "alwayson.yml",
+            "estimated_duration_minutes": 30,
+            "operations": [
+                "Verify MSSQL connectivity",
+                "Create AG endpoints",
+                "Create and join availability group",
+                "Verify AG health"
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error initiating Always-On deployment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to initiate Always-On deployment: {str(e)}"
         )
 
 
@@ -175,7 +211,9 @@ async def get_target_hosts():
         return {
             "status": "success",
             "inventory": inventory,
-            "dns": deployer.resolve_hosts()
+            "dns": deployer.resolve_hosts(),
+            "ansible_inventory": settings.ANSIBLE_INVENTORY,
+            "ansible_playbooks": settings.ANSIBLE_PLAYBOOK_DIR,
         }
     except Exception as e:
         logger.error(f"Error retrieving hosts: {str(e)}")
