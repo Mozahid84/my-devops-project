@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
@@ -21,6 +23,26 @@ class AnsibleRunner:
         self.playbook_dir = Path(settings.ANSIBLE_PLAYBOOK_DIR)
         self.command = settings.ANSIBLE_CMD
 
+    def _resolve_command(self) -> str:
+        """Resolve the Ansible executable from PATH or the active Python environment."""
+        if os.path.isabs(self.command) or os.sep in self.command or (os.altsep and os.altsep in self.command):
+            return self.command
+
+        resolved = shutil.which(self.command)
+        if resolved:
+            return resolved
+
+        if os.name == "nt":
+            scripts_dir = Path(sys.prefix) / "Scripts"
+            candidate = scripts_dir / f"{self.command}.exe"
+            if candidate.exists():
+                return str(candidate)
+            fallback = scripts_dir / self.command
+            if fallback.exists():
+                return str(fallback)
+
+        return self.command
+
     def run_playbook(
         self,
         playbook_name: str,
@@ -34,7 +56,7 @@ class AnsibleRunner:
         if not playbook_path.exists():
             raise FileNotFoundError(f"Playbook not found: {playbook_path}")
 
-        command = [self.command, "-i", str(self.inventory), str(playbook_path)]
+        command = [self._resolve_command(), "-i", str(self.inventory), str(playbook_path)]
         if tags:
             command.extend(["-t", ",".join(tags)])
         if skip_tags:
@@ -56,13 +78,18 @@ class AnsibleRunner:
             env["ANSIBLE_PRIVATE_KEY_FILE"] = os.path.expanduser(settings.ANSIBLE_PRIVATE_KEY_FILE)
 
         start_time = datetime.utcnow()
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            env=env,
-            timeout=settings.API_TIMEOUT,
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=settings.API_TIMEOUT,
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"Ansible executable not found: {self._resolve_command()}") from exc
+        except OSError as exc:
+            raise RuntimeError(f"Unable to launch Ansible: {exc}") from exc
         end_time = datetime.utcnow()
 
         return {

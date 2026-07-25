@@ -28,14 +28,21 @@ If names are needed, add them to `/etc/hosts` on the VMs or your workstation hos
 If you do not already have a key:
 
 ```bash
-ssh-keygen -t ed25519 -C "mssql-lab"
+ssh-keygen -t rsa -b 4096 -C "mssql-lab"
 ```
 
-Copy the key to both VMs:
+Copy the key to both VMs using the existing `devops` account:
 
 ```bash
-ssh-copy-id -i ~/.ssh/id_ed25519.pub root@192.168.70.129
-ssh-copy-id -i ~/.ssh/id_ed25519.pub root@192.168.70.130
+ssh-copy-id -i ~/.ssh/id_rsa.pub devops@192.168.70.129
+ssh-copy-id -i ~/.ssh/id_rsa.pub devops@192.168.70.130
+```
+
+Verify the login:
+
+```bash
+ssh -i ~/.ssh/id_rsa devops@192.168.70.129 'hostname'
+ssh -i ~/.ssh/id_rsa devops@192.168.70.130 'hostname'
 ```
 
 ## 3. Create or Update Local Environment File
