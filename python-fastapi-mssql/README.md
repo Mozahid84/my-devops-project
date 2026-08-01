@@ -101,6 +101,17 @@ Create 10-stripe backup on VM1 and transfer to VM2.
 curl -X POST http://localhost:8000/api/v1/deploy/backup
 ```
 
+#### `/api/v1/deploy/full-ag`
+Run the full AdventureWorks workflow:
+- restore AdventureWorks to VM1
+- create a 10-stripe backup on VM1
+- transfer the backup to VM2 and restore it
+- configure the Always On availability group
+
+```bash
+curl -X POST http://localhost:8000/api/v1/deploy/full-ag
+```
+
 #### `/api/v1/deploy/install-tools`
 Install MSSQL tools (sqlcmd) only.
 

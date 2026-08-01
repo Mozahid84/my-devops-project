@@ -79,6 +79,31 @@ class AnsibleMssqlDeployer:
     def deploy_alwayson(self, task_id: str) -> None:
         self._run_task(task_id, lambda: self.ansible.run_playbook("alwayson.yml", extra_vars=self._build_extra_vars()))
 
+    def deploy_full_ag(self, task_id: str) -> None:
+        self._run_task(task_id, self._run_full_ag_sequence)
+
+    def _run_full_ag_sequence(self) -> Dict[str, object]:
+        results: Dict[str, object] = {}
+        results["restore_vm1"] = self.ansible.run_playbook(
+            "site.yml",
+            tags=["adventureworks"],
+            limit="vm1",
+            extra_vars=self._build_extra_vars(),
+        )
+        results["backup_restore_vm2"] = self.ansible.run_playbook(
+            "backup.yml",
+            extra_vars=self._build_extra_vars(),
+        )
+        results["alwayson"] = self.ansible.run_playbook(
+            "alwayson.yml",
+            extra_vars=self._build_extra_vars(),
+        )
+        return results
+
+    def deploy_build(self, task_id: str) -> None:
+        """Run the MSSQL build playbook which prepares hosts and runs the mssql_build role."""
+        self._run_task(task_id, lambda: self.ansible.run_playbook("build.yml", extra_vars=self._build_extra_vars()))
+
     def get_hosts(self) -> Dict:
         return {
             "hosts": [
@@ -123,7 +148,15 @@ class AnsibleMssqlDeployer:
         self._run_task(task_id, lambda: self.ansible.run_playbook("site.yml", tags=["install", "tools"], extra_vars=self._build_extra_vars()))
 
     def restore_adventureworks(self, task_id: str) -> None:
-        self._run_task(task_id, lambda: self.ansible.run_playbook("site.yml", tags=["adventureworks"], extra_vars=self._build_extra_vars()))
+        self._run_task(
+            task_id,
+            lambda: self.ansible.run_playbook(
+                "site.yml",
+                tags=["adventureworks"],
+                limit="vm1",
+                extra_vars=self._build_extra_vars(),
+            ),
+        )
 
     def _build_extra_vars(self) -> Dict[str, object]:
         return {

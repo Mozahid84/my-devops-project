@@ -1,0 +1,9 @@
+---
+# MSSQL build playbook - prepares hosts and runs the mssql_build role
+- name: MSSQL Build Playbook
+  hosts: mssql_servers
+  become: true
+  remote_user: '{{ ansible_user | default(omit) }}'
+  vars_files: []
+  roles:
+    - role: mssql_build

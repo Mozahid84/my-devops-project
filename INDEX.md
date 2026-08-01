@@ -69,6 +69,7 @@ Detailed index of all files, documentation, and resources.
 | **PROJECT_INDEX.md** | Detailed project index | 20 min |
 | **ARCHITECTURE.md** | System architecture with diagrams | 20 min |
 | **DELIVERY_SUMMARY.md** | What was created and value delivered | 15 min |
+| **docs/changelog/mssql-build-changelog.md** | MSSQL build implementation changelog | 5 min |
 
 ---
 
@@ -83,6 +84,18 @@ Detailed index of all files, documentation, and resources.
 1. [ARCHITECTURE.md](ARCHITECTURE.md) - View all system diagrams
 2. [ansible-mssql-deploy/DESIGN.md](ansible-mssql-deploy/DESIGN.md) - Ansible architecture
 3. [python-fastapi-mssql/DESIGN.md](python-fastapi-mssql/DESIGN.md) - FastAPI architecture
+4. [docs/guides/mssql-build-design.md](docs/guides/mssql-build-design.md) - MSSQL build design
+5. [docs/guides/mssql-rewind-and-teardown-design.md](docs/guides/mssql-rewind-and-teardown-design.md) - MSSQL rewind and teardown lab design
+6. [docs/guides/mssql-dr-failover-design.md](docs/guides/mssql-dr-failover-design.md) - MSSQL DR failover design
+7. [docs/guides/mssql-dr-sync-rebuild-design.md](docs/guides/mssql-dr-sync-rebuild-design.md) - MSSQL standby rebuild design
+8. [docs/guides/oracle-19c-dataguard-design.md](docs/guides/oracle-19c-dataguard-design.md) - Oracle 19c Data Guard lab design
+9. [docs/guides/oracle-rewind-and-teardown-design.md](docs/guides/oracle-rewind-and-teardown-design.md) - Oracle rewind and teardown design
+10. [docs/guides/oracle-dataguard-failover-design.md](docs/guides/oracle-dataguard-failover-design.md) - Oracle Data Guard failover design
+11. [docs/guides/oracle-dataguard-sync-rebuild-design.md](docs/guides/oracle-dataguard-sync-rebuild-design.md) - Oracle standby rebuild design
+12. [docs/guides/mysql-8-4-10-xtrabackup-replication-design.md](docs/guides/mysql-8-4-10-xtrabackup-replication-design.md) - MySQL 8.4.10 replication lab design
+13. [docs/guides/mysql-rewind-and-teardown-design.md](docs/guides/mysql-rewind-and-teardown-design.md) - MySQL rewind and teardown design
+14. [docs/guides/mysql-replication-failover-design.md](docs/guides/mysql-replication-failover-design.md) - MySQL replication failover design
+15. [docs/guides/mysql-replication-sync-rebuild-design.md](docs/guides/mysql-replication-sync-rebuild-design.md) - MySQL replication sync rebuild design
 
 ### I want to set up CI/CD:
 1. [SETUP_GUIDE.md](SETUP_GUIDE.md) - GitLab CI/CD section

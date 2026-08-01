@@ -105,6 +105,11 @@ curl -X POST http://localhost:8000/api/v1/deploy/install
 curl -X POST http://localhost:8000/api/v1/deploy/backup
 ```
 
+### Run the full AdventureWorks + AG workflow
+```bash
+curl -X POST http://localhost:8000/api/v1/deploy/full-ag
+```
+
 ### Configure Always On Availability Group
 ```bash
 curl -X POST http://localhost:8000/api/v1/deploy/alwayson

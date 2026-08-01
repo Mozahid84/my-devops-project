@@ -1,0 +1,7 @@
+---
+# Default variables for the mssql_build role
+mssql_version: "2019"
+mssql_service_user: "mssql"
+backup_dir: "/var/opt/mssql/backups"
+data_dir: "/var/opt/mssql/data"
+log_dir: "/var/opt/mssql/log"

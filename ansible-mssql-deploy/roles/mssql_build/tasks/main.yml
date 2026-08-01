@@ -1,0 +1,38 @@
+---
+# Tasks for MSSQL build role - lightweight, idempotent steps
+- name: Ensure backup directory exists
+  file:
+    path: "{{ backup_dir | default('/var/opt/mssql/backups') }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure data directory exists
+  file:
+    path: "{{ data_dir | default('/var/opt/mssql/data') }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure log directory exists
+  file:
+    path: "{{ log_dir | default('/var/opt/mssql/log') }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create mssql service account (placeholder)
+  user:
+    name: "{{ mssql_service_user | default('mssql') }}"
+    state: present
+  ignore_errors: yes
+
+- name: Placeholder - install SQL Server package (manual step)
+  debug:
+    msg: |
+      "This role is a skeleton. Replace this task with platform-specific
+      installation steps for SQL Server (package install, repo config,
+      or use media). For labs, consider using prebuilt images or packages."

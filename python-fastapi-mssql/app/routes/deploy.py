@@ -123,9 +123,42 @@ async def deploy_install_tools(background_tasks: BackgroundTasks):
         )
 
 
+@router.post("/build")
+async def deploy_build(background_tasks: BackgroundTasks):
+    """Prepare hosts and perform MSSQL build tasks (idempotent).
+
+    This endpoint runs a lightweight "build.yml" playbook which includes
+    the `mssql_build` role. The role is intentionally a safe skeleton and
+    should be extended with platform-specific installation tasks.
+    """
+
+    logger.info("Received deployment request - MSSQL build")
+
+    try:
+        task_id = deployer.start_task("build")
+        background_tasks.add_task(deployer.deploy_build, task_id)
+
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "MSSQL build started (prepare + role)",
+            "engine": "ansible",
+            "playbook": "build.yml",
+            "estimated_duration_minutes": 10,
+            "notes": "This playbook performs safe preparatory actions. Replace role tasks to perform full installs."
+        }
+
+    except Exception as e:
+        logger.error(f"Error initiating MSSQL build: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to initiate MSSQL build: {str(e)}"
+        )
+
+
 @router.post("/restore-db")
 async def deploy_restore_db(background_tasks: BackgroundTasks):
-    """Restore AdventureWorks database only"""
+    """Restore AdventureWorks database to VM1 only."""
     
     logger.info("Received deployment request - Restore database")
     
@@ -136,14 +169,14 @@ async def deploy_restore_db(background_tasks: BackgroundTasks):
         return {
             "status": "initiated",
             "task_id": task_id,
-            "message": "Database restore started",
+            "message": "Database restore started on VM1",
             "engine": "ansible",
             "playbook": "site.yml",
             "tags": ["adventureworks"],
             "database": "AdventureWorks",
             "operations": [
-                "Download AdventureWorks2019.bak",
-                "Restore to MSSQL instance"
+                "Download AdventureWorks2019.bak on VM1",
+                "Restore AdventureWorks on VM1"
             ],
             "estimated_duration_minutes": 10
         }
@@ -183,6 +216,36 @@ async def deploy_alwayson(background_tasks: BackgroundTasks):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to initiate Always-On deployment: {str(e)}"
+        )
+
+
+@router.post("/full-ag")
+async def deploy_full_ag(background_tasks: BackgroundTasks):
+    """Restore AdventureWorks to VM1, create a striped backup, copy to VM2, restore there, and configure AG."""
+    logger.info("Received deployment request - Full AG workflow")
+    try:
+        task_id = deployer.start_task("full-ag")
+        background_tasks.add_task(deployer.deploy_full_ag, task_id)
+
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "Full AdventureWorks backup/restore and Always On workflow started",
+            "engine": "ansible",
+            "playbooks": ["site.yml", "backup.yml", "alwayson.yml"],
+            "operations": [
+                "Restore AdventureWorks on VM1",
+                "Create 10-stripe backup on VM1",
+                "Transfer backup to VM2 and restore",
+                "Configure Always On availability group"
+            ],
+            "estimated_duration_minutes": 90,
+        }
+    except Exception as e:
+        logger.error(f"Error initiating full AG workflow: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to initiate full AG workflow: {str(e)}"
         )
 
 
