@@ -7,7 +7,7 @@
   pre_tasks:
     - name: Verify MSSQL connectivity on each replica
       shell: |
-        {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT 1"
+        {{ mssql_tools_path | default('/opt/mssql-tools/bin') }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT 1"
       register: connectivity_check
       retries: 10
       delay: 5

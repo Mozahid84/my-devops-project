@@ -1,5 +1,154 @@
 ---
 # Always On Availability Group configuration
+# Builds a CLUSTER_TYPE=NONE (no external cluster manager), manual-failover
+# AG between vm1 (primary) and vm2 (secondary), using certificate-based
+# endpoint authentication since there is no AD/Kerberos in this lab.
+
+- name: Check current HADR setting
+  command: grep -c "hadrenabled = 1" /var/opt/mssql/mssql.conf
+  register: hadr_enabled_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Enable HADR on MSSQL
+  shell: /opt/mssql/bin/mssql-conf set hadr.hadrenabled 1
+  when: hadr_enabled_check.stdout | trim == '0'
+  notify: restart mssql service
+  tags:
+    - alwayson
+
+- name: Flush handlers to apply HADR setting
+  meta: flush_handlers
+  tags:
+    - alwayson
+
+- name: Wait for SQL Server port after HADR enable
+  wait_for:
+    port: "{{ mssql_port }}"
+    delay: 5
+    timeout: 120
+  tags:
+    - alwayson
+
+- name: Wait for sqlcmd connectivity after HADR enable
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT 1"
+  register: post_hadr_check
+  retries: 10
+  delay: 5
+  until: post_hadr_check.rc == 0
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Check firewalld status
+  command: systemctl is-active firewalld
+  register: firewalld_status
+  failed_when: false
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Open AG endpoint port in firewalld
+  firewalld:
+    port: "{{ ag_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: firewalld_status.stdout | trim == 'active'
+  tags:
+    - alwayson
+
+- name: Create master key and certificate on primary replica (vm1)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##')
+      CREATE MASTER KEY ENCRYPTION BY PASSWORD = '{{ ag_cert_password }}';
+    IF NOT EXISTS (SELECT * FROM sys.certificates WHERE name = '{{ ag_cert_name }}')
+      CREATE CERTIFICATE {{ ag_cert_name }} WITH SUBJECT = '{{ ag_cert_name }}';
+    "
+  when: inventory_hostname == 'vm1'
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Check if certificate backup files already exist on vm1
+  stat:
+    path: "{{ data_dir }}/{{ ag_cert_name }}.cer"
+  register: cert_file_stat
+  when: inventory_hostname == 'vm1'
+  tags:
+    - alwayson
+
+- name: Backup certificate to file on vm1
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    BACKUP CERTIFICATE {{ ag_cert_name }}
+    TO FILE = '{{ data_dir }}/{{ ag_cert_name }}.cer'
+    WITH PRIVATE KEY (
+      FILE = '{{ data_dir }}/{{ ag_cert_name }}.pvk',
+      ENCRYPTION BY PASSWORD = '{{ ag_cert_password }}'
+    )
+    "
+  when: inventory_hostname == 'vm1' and not cert_file_stat.stat.exists
+  changed_when: true
+  tags:
+    - alwayson
+
+- name: Fetch certificate files from vm1 to controller
+  fetch:
+    src: "{{ data_dir }}/{{ ag_cert_name }}.{{ item }}"
+    dest: "{{ local_cert_relay_dir }}/"
+    flat: yes
+  loop:
+    - cer
+    - pvk
+  when: inventory_hostname == 'vm1'
+  tags:
+    - alwayson
+
+- name: Create master key on secondary replica (vm2)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##')
+      CREATE MASTER KEY ENCRYPTION BY PASSWORD = '{{ ag_cert_password }}';
+    "
+  when: inventory_hostname == 'vm2'
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Copy certificate files to vm2
+  copy:
+    src: "{{ local_cert_relay_dir }}/{{ ag_cert_name }}.{{ item }}"
+    dest: "{{ data_dir }}/{{ ag_cert_name }}.{{ item }}"
+    owner: mssql
+    group: mssql
+    mode: '0600'
+  loop:
+    - cer
+    - pvk
+  when: inventory_hostname == 'vm2'
+  tags:
+    - alwayson
+
+- name: Import certificate on vm2
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF NOT EXISTS (SELECT * FROM sys.certificates WHERE name = '{{ ag_cert_name }}')
+    CREATE CERTIFICATE {{ ag_cert_name }}
+    FROM FILE = '{{ data_dir }}/{{ ag_cert_name }}.cer'
+    WITH PRIVATE KEY (
+      FILE = '{{ data_dir }}/{{ ag_cert_name }}.pvk',
+      DECRYPTION BY PASSWORD = '{{ ag_cert_password }}'
+    )
+    "
+  when: inventory_hostname == 'vm2'
+  changed_when: false
+  tags:
+    - alwayson
 
 - name: Create Always On endpoint on each replica
   shell: |
@@ -8,10 +157,52 @@
     CREATE ENDPOINT [{{ ag_endpoint_name }}]
     STATE=STARTED
     AS TCP (LISTENER_PORT = {{ ag_port }})
-    FOR DATA_MIRRORING (ROLE = ALL, AUTHENTICATION = WINDOWS NEGOTIATE)
+    FOR DATA_MIRRORING (ROLE = ALL, AUTHENTICATION = CERTIFICATE {{ ag_cert_name }})
     "
   register: endpoint_result
   changed_when: "'created' in endpoint_result.stdout or 'already exists' in endpoint_result.stdout"
+  tags:
+    - alwayson
+
+- name: Set AdventureWorks recovery model to FULL on vm1
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "ALTER DATABASE AdventureWorks SET RECOVERY FULL"
+  when: inventory_hostname == 'vm1'
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Seed full + log backup for AdventureWorks on vm1 (required for AG log chain)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    BACKUP DATABASE AdventureWorks TO DISK = '{{ backup_dir }}/aw_full_seed.bak' WITH INIT;
+    BACKUP LOG AdventureWorks TO DISK = '{{ backup_dir }}/aw_log_seed.bak' WITH INIT;
+    "
+  when: inventory_hostname == 'vm1'
+  changed_when: true
+  tags:
+    - alwayson
+
+- name: Check whether AdventureWorks on vm2 is already part of an AG
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.dm_hadr_database_replica_states drs JOIN sys.databases d ON d.database_id = drs.database_id WHERE d.name = 'AdventureWorks'"
+  when: inventory_hostname == 'vm2'
+  register: vm2_ag_db_check
+  changed_when: false
+  tags:
+    - alwayson
+
+- name: Drop pre-seeded AdventureWorks on vm2 before AG join
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.databases WHERE name = 'AdventureWorks')
+    BEGIN
+      ALTER DATABASE AdventureWorks SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+      DROP DATABASE AdventureWorks;
+    END
+    "
+  when: inventory_hostname == 'vm2' and (vm2_ag_db_check.stdout | trim) == '0'
+  changed_when: true
   tags:
     - alwayson
 
@@ -24,7 +215,9 @@
       WITH (CLUSTER_TYPE = {{ ag_cluster_type }})
       FOR DATABASE {{ ag_databases | join(', ') }}
       REPLICA ON
-        N'{{ inventory_hostname }}' WITH (ENDPOINT_URL = N'tcp://{{ ansible_host }}:{{ ag_port }}', FAILOVER_MODE = {{ ag_failover_mode }}, AVAILABILITY_MODE = {{ ag_replica_mode }}, SEEDING_MODE = AUTOMATIC)
+      {% for host in groups['mssql_servers'] %}
+        N'{{ hostvars[host].vmware_name }}' WITH (ENDPOINT_URL = N'tcp://{{ hostvars[host].ansible_host }}:{{ ag_port }}', FAILOVER_MODE = {{ ag_failover_mode }}, AVAILABILITY_MODE = {{ ag_replica_mode }}, SEEDING_MODE = AUTOMATIC){{ ',' if not loop.last else '' }}
+      {% endfor %}
     END
     "
   register: ag_result
@@ -36,8 +229,8 @@
 - name: Join secondary replica to Availability Group
   shell: |
     {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
-    IF NOT EXISTS (SELECT * FROM sys.dm_hadr_availability_replica_states WHERE replica_server_name = '{{ inventory_hostname }}' AND role_desc = 'SECONDARY')
-    ALTER AVAILABILITY GROUP [{{ ag_name }}] JOIN
+    IF NOT EXISTS (SELECT * FROM sys.dm_hadr_availability_replica_states ars JOIN sys.availability_replicas ar ON ar.replica_id = ars.replica_id WHERE ar.replica_server_name = '{{ vmware_name }}' AND ars.role_desc = 'SECONDARY')
+    ALTER AVAILABILITY GROUP [{{ ag_name }}] JOIN WITH (CLUSTER_TYPE = {{ ag_cluster_type }})
     "
   when: inventory_hostname == 'vm2'
   register: join_result
@@ -45,9 +238,29 @@
   tags:
     - alwayson
 
+- name: Grant automatic seeding permission on secondary
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "ALTER AVAILABILITY GROUP [{{ ag_name }}] GRANT CREATE ANY DATABASE"
+  when: inventory_hostname == 'vm2'
+  changed_when: true
+  tags:
+    - alwayson
+
+- name: Wait for AdventureWorks to reach SYNCHRONIZED state on all replicas
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.dm_hadr_database_replica_states drs JOIN sys.databases d ON d.database_id = drs.database_id WHERE d.name = 'AdventureWorks' AND drs.synchronization_state_desc != 'SYNCHRONIZED'"
+  register: sync_wait
+  retries: 30
+  delay: 10
+  until: sync_wait.stdout | trim == '0'
+  when: inventory_hostname == 'vm1'
+  changed_when: false
+  tags:
+    - alwayson
+
 - name: Verify Availability Group state
   shell: |
-    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT replica_server_name, role_desc, synchronization_state_desc FROM sys.dm_hadr_availability_replica_states"
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT ar.replica_server_name, ars.role_desc, ars.synchronization_health_desc FROM sys.dm_hadr_availability_replica_states ars JOIN sys.availability_replicas ar ON ar.replica_id = ars.replica_id"
   register: verify_ag
   changed_when: false
   tags:

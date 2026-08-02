@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     BACKUP_DIR: str = os.getenv("BACKUP_DIR", "/backup")
     BACKUP_STRIPES: int = int(os.getenv("BACKUP_STRIPES", "10"))
     LOCAL_BACKUP_DIR: str = os.getenv("LOCAL_BACKUP_DIR", "./backups/vm1_striped")
+    LOCAL_CERT_RELAY_DIR: str = os.getenv("LOCAL_CERT_RELAY_DIR", "./backups/ag_certs")
     DATA_DIR: str = os.getenv("DATA_DIR", "/var/opt/mssql/data")
     MSSQL_LOG_DIR: str = os.getenv("MSSQL_LOG_DIR", "/var/opt/mssql/log")
 

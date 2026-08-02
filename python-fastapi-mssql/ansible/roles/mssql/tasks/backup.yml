@@ -6,6 +6,8 @@
     path: "{{ backup_dir }}/striped"
     state: directory
     mode: '0755'
+    owner: mssql
+    group: mssql
   when: inventory_hostname == "vm1"
   tags:
     - backup
@@ -27,6 +29,7 @@
       DISK='{{ backup_dir }}/striped/adv_stripe_09.bak',
       DISK='{{ backup_dir }}/striped/adv_stripe_10.bak'
     WITH FORMAT, COMPRESSION
+    GO
     EOF
   when: inventory_hostname == "vm1"
   register: backup_result

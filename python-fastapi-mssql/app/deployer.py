@@ -15,6 +15,14 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+class SequenceStepError(RuntimeError):
+    """Raised when one step of a multi-playbook sequence fails, carrying the partial results."""
+
+    def __init__(self, message: str, results: Dict[str, object]) -> None:
+        super().__init__(message)
+        self.results = results
+
+
 class AnsibleMssqlDeployer:
     """Deploy MSSQL using Ansible playbooks."""
 
@@ -68,6 +76,7 @@ class AnsibleMssqlDeployer:
                 status="failed",
                 completed_at=datetime.now().isoformat(),
                 error=str(exc),
+                results=getattr(exc, "results", None),
             )
 
     def deploy_install(self, task_id: str) -> None:
@@ -86,18 +95,26 @@ class AnsibleMssqlDeployer:
         results: Dict[str, object] = {}
         results["restore_vm1"] = self.ansible.run_playbook(
             "site.yml",
-            tags=["adventureworks"],
             limit="vm1",
             extra_vars=self._build_extra_vars(),
         )
+        if not results["restore_vm1"]["success"]:
+            raise SequenceStepError("restore_vm1 step failed; see results.restore_vm1 for details", results)
+
         results["backup_restore_vm2"] = self.ansible.run_playbook(
             "backup.yml",
             extra_vars=self._build_extra_vars(),
         )
+        if not results["backup_restore_vm2"]["success"]:
+            raise SequenceStepError("backup_restore_vm2 step failed; see results.backup_restore_vm2 for details", results)
+
         results["alwayson"] = self.ansible.run_playbook(
             "alwayson.yml",
             extra_vars=self._build_extra_vars(),
         )
+        if not results["alwayson"]["success"]:
+            raise SequenceStepError("alwayson step failed; see results.alwayson for details", results)
+
         return results
 
     def deploy_build(self, task_id: str) -> None:
@@ -152,7 +169,6 @@ class AnsibleMssqlDeployer:
             task_id,
             lambda: self.ansible.run_playbook(
                 "site.yml",
-                tags=["adventureworks"],
                 limit="vm1",
                 extra_vars=self._build_extra_vars(),
             ),
@@ -168,4 +184,6 @@ class AnsibleMssqlDeployer:
             "log_dir": settings.MSSQL_LOG_DIR,
             "mssql_port": settings.MSSQL_PORT,
             "ansible_private_key_file": settings.ANSIBLE_PRIVATE_KEY_FILE,
+            "local_backup_dir": settings.LOCAL_BACKUP_DIR,
+            "local_cert_relay_dir": settings.LOCAL_CERT_RELAY_DIR,
         }

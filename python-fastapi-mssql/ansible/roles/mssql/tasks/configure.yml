@@ -6,8 +6,8 @@
     path: "{{ backup_dir }}"
     state: directory
     mode: '0755'
-    owner: root
-    group: root
+    owner: mssql
+    group: mssql
   tags:
     - configure
     - directories
@@ -17,6 +17,8 @@
     path: "{{ data_dir }}"
     state: directory
     mode: '0755'
+    owner: mssql
+    group: mssql
   tags:
     - configure
     - directories
@@ -26,6 +28,8 @@
     path: "{{ log_dir }}"
     state: directory
     mode: '0755'
+    owner: mssql
+    group: mssql
   tags:
     - configure
     - directories

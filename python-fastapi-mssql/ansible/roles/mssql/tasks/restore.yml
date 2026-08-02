@@ -1,10 +1,23 @@
 ---
 # Copy backup from VM1 to VM2 and restore
 
+- name: Ensure local relay directory exists on controller
+  file:
+    path: "{{ local_backup_dir }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == "vm1"
+  tags:
+    - restore
+    - transfer
+    - vm1-only
+
 - name: Fetch backup files from VM1
   synchronize:
     src: "{{ backup_dir }}/striped/"
-    dest: "./backups/vm1_striped/"
+    dest: "{{ local_backup_dir }}/"
     mode: pull
   when: inventory_hostname == "vm1"
   tags:
@@ -17,6 +30,8 @@
     path: "{{ backup_dir }}/striped"
     state: directory
     mode: '0755'
+    owner: mssql
+    group: mssql
   when: inventory_hostname == "vm2"
   tags:
     - restore
@@ -25,7 +40,7 @@
 
 - name: Copy backup files to VM2
   copy:
-    src: "./backups/vm1_striped/"
+    src: "{{ local_backup_dir }}/"
     dest: "{{ backup_dir }}/striped/"
     mode: '0644'
   when: inventory_hostname == "vm2"
@@ -81,6 +96,7 @@
       DISK='{{ backup_dir }}/striped/adv_stripe_09.bak',
       DISK='{{ backup_dir }}/striped/adv_stripe_10.bak'
     WITH REPLACE
+    GO
     EOF
   when: inventory_hostname == "vm2"
   register: restore_result

@@ -156,7 +156,44 @@ curl http://localhost:8000/api/v1/deploy/history
 curl http://localhost:8000/api/v1/deploy/hosts
 ```
 
-## 9. Push to GitLab and GitHub
+## 9. Checking Logs
+
+Ansible is agentless -- it doesn't write a persistent log file on VM1/VM2
+itself. The `ansible-playbook` output lives on the **controller** (wherever
+`uvicorn` is running), and only a couple of small artifacts land on the VMs.
+
+### Controller side (the actual "Ansible logs")
+- **Per-run history via the API** -- the full `stdout`/`stderr` of every
+  `ansible-playbook` invocation is captured and returned here:
+  ```bash
+  curl http://localhost:8000/api/v1/deploy/history | jq
+  ```
+  Each entry includes the exact command line run, return code, and complete
+  stdout/stderr for that playbook.
+- **The FastAPI application log file**, which also records request-level
+  events:
+  ```bash
+  tail -f python-fastapi-mssql/logs/app.log
+  ```
+- For more verbose Ansible output on future runs, raise `ANSIBLE_VERBOSE` in
+  `.env` (e.g. to `3` for `-vvv`).
+
+### On VM1 (and VM2)
+- **SQL Server's own error log** is the most useful thing to check for
+  install/restore/Always On issues -- this is where SQL Server itself
+  reports what happened (HADR state changes, endpoint/certificate errors,
+  AG join attempts, etc.):
+  ```bash
+  ssh devops@192.168.70.129 'sudo tail -100 /var/opt/mssql/log/errorlog'
+  ```
+  Older logs roll to `errorlog.1`, `errorlog.2`, etc. in the same directory.
+- **The one-off deployment summary** written by `site.yml`'s `post_tasks`
+  after each install run:
+  ```bash
+  ssh devops@192.168.70.129 'cat /tmp/mssql_deployment_vm1.txt'
+  ```
+
+## 10. Push to GitLab and GitHub
 From the workspace root:
 
 ```bash

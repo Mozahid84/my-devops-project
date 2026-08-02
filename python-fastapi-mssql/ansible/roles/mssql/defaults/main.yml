@@ -20,5 +20,9 @@ ag_replica_mode: "SYNCHRONOUS_COMMIT"
 ag_databases:
   - AdventureWorks
 ag_endpoint_name: "Hadr_endpoint"
-ag_cluster_type: "EXTERNAL"
+ag_cluster_type: "NONE"
 ag_failover_mode: "MANUAL"
+ag_cert_name: "dbm_certificate"
+ag_cert_password: "{{ sa_password }}"
+local_backup_dir: "./backups/vm1_striped"
+local_cert_relay_dir: "./backups/ag_certs"
