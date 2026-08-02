@@ -1,5 +1,25 @@
 # FastAPI MSSQL Ansible Integration Change Log
 
+## MSSQL Build Workflow & Role De-duplication
+- Added the `mssql_build` role and `playbooks/build.yml` playbook: a full
+  idempotent SQL Server install flow (dirs, service account, repos,
+  packages, `mssql-conf setup`, verification), exposed via the new
+  `POST /api/v1/deploy/build` endpoint (`deployer.deploy_build`).
+- Fixed an accidental role duplication: because Ansible resolves roles
+  relative to the playbook's own directory and this project has no
+  `ansible.cfg` `roles_path` override, `ansible/playbooks/roles/` had become
+  a second physical copy of `ansible/roles/`. Replaced it with a symlink
+  (`ansible/playbooks/roles -> ../roles`) so there is a single source of
+  truth; verified with `ansible-playbook --syntax-check` against all four
+  playbooks (`build.yml`, `site.yml`, `alwayson.yml`, `backup.yml`).
+- Added `tags: always` to each `include_tasks` step in
+  `roles/mssql/tasks/main.yml` so sub-task files aren't skipped when the
+  role is invoked with tag filters from `alwayson.yml`/`backup.yml`.
+- Reconciled stale docs: `roles/mssql_build/README.md` no longer describes
+  the role as a placeholder skeleton, `DESIGN.md`'s stale
+  "refactored to Paramiko" banner was removed, and `main.py`/`README.md`
+  no longer describe the service as native-Python-SSH-based.
+
 ## Summary
 This update converts the `python-fastapi-mssql` project from native SSH-based MSSQL deployment to an Ansible-driven workflow. The FastAPI service now orchestrates embedded Ansible playbooks and roles for:
 - MSSQL installation on VM1 and VM2
@@ -61,4 +81,8 @@ This update converts the `python-fastapi-mssql` project from native SSH-based MS
 1. Add validation for `ansible-playbook` availability in `routes/health.py`
 2. Add unit tests or mocks for `AnsibleRunner`
 3. Validate the Always On playbook on actual CentOS 8/RHEL 8 hosts
-4. Update `README.md` to document new Ansible endpoint and workflow
+4. Remove the unused `app/python_deployer.py` and the now-dead `paramiko`
+   dependency, or otherwise decide their fate (currently unimported dead code)
+5. Reconcile the SSH user/key path shown in `RUNBOOK.md`/`.env.example`
+   (`root@`, `id_ed25519`) with `ansible/inventory/hosts.ini`
+   (`ansible_user=devops`, `id_rsa`)

@@ -7,11 +7,13 @@ __pycache__/
 .uv-cache/
 .uv-python/
 venv/
+.venv/
 logs/
 backups/
 python-fastapi-mssql/logs/
 python-fastapi-mssql/backups/
 python-fastapi-mssql/venv/
+python-fastapi-mssql/.venv/
 .vscode/
 .idea/
 id_rsa*

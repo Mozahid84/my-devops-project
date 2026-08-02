@@ -3,15 +3,25 @@
 
 - name: Include install tasks
   include_tasks: install.yml
+  tags:
+    - always
 
 - name: Include configure tasks
   include_tasks: configure.yml
+  tags:
+    - always
 
 - name: Include AdventureWorks install tasks
   include_tasks: adventureworks.yml
+  tags:
+    - always
 
 - name: Include backup tasks
   include_tasks: backup.yml
+  tags:
+    - always
 
 - name: Include restore tasks
   include_tasks: restore.yml
+  tags:
+    - always

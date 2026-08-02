@@ -127,9 +127,9 @@ async def deploy_install_tools(background_tasks: BackgroundTasks):
 async def deploy_build(background_tasks: BackgroundTasks):
     """Prepare hosts and perform MSSQL build tasks (idempotent).
 
-    This endpoint runs a lightweight "build.yml" playbook which includes
-    the `mssql_build` role. The role is intentionally a safe skeleton and
-    should be extended with platform-specific installation tasks.
+    This endpoint runs the "build.yml" playbook which includes the
+    `mssql_build` role: a full idempotent SQL Server install (dirs, service
+    account, repos, packages, mssql-conf setup, and verification).
     """
 
     logger.info("Received deployment request - MSSQL build")
@@ -141,11 +141,11 @@ async def deploy_build(background_tasks: BackgroundTasks):
         return {
             "status": "initiated",
             "task_id": task_id,
-            "message": "MSSQL build started (prepare + role)",
+            "message": "MSSQL build started (prepare + install)",
             "engine": "ansible",
             "playbook": "build.yml",
             "estimated_duration_minutes": 10,
-            "notes": "This playbook performs safe preparatory actions. Replace role tasks to perform full installs."
+            "notes": "Runs the mssql_build role's full install flow; safe to re-run (idempotent)."
         }
 
     except Exception as e:

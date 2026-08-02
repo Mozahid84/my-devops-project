@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title="MSSQL Deployment API",
-    description="FastAPI service for MSSQL deployment automation using native Python SSH",
+    description="FastAPI service for MSSQL deployment automation using embedded Ansible playbooks",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",

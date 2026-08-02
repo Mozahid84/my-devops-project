@@ -54,7 +54,8 @@ python-fastapi-mssql/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI application
 │   ├── config.py            # Configuration settings
-│   ├── python_deployer.py   # Native Python SSH deployment workflow
+│   ├── ansible_runner.py    # Executes ansible-playbook via subprocess
+│   ├── deployer.py          # Ansible-based deployment orchestration
 │   └── routes/
 │       ├── __init__.py
 │       ├── deploy.py        # Deployment endpoints
@@ -117,6 +118,14 @@ Install MSSQL tools (sqlcmd) only.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/deploy/install-tools
+```
+
+#### `/api/v1/deploy/build`
+Idempotent MSSQL build: runs `build.yml` (the `mssql_build` role) to prepare
+a host and install SQL Server from scratch. Safe to re-run.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/deploy/build
 ```
 
 #### `/api/v1/deploy/restore-db`
@@ -231,8 +240,8 @@ MSSQL_EDITION=Developer
 # VMs
 VM1_HOST=192.168.70.129
 VM2_HOST=192.168.70.130
-VM1_USER=root
-VM2_USER=root
+VM1_USER=devops
+VM2_USER=devops
 SSH_KEY_PATH=~/.ssh/id_rsa
 SSH_PASSWORD=
 
@@ -411,9 +420,9 @@ curl -X POST http://localhost:8000/api/v1/deploy/ping | jq
    └─ Return immediately (201 Accepted)
 
 3. Background Task
-   ├─ Initialize Python SSH deployer
-   ├─ Connect to 192.168.70.129 and 192.168.70.130
-   ├─ Execute MSSQL workflow commands
+   ├─ Build ansible-playbook command (inventory, tags, extra vars)
+   ├─ Execute against 192.168.70.129 and 192.168.70.130
+   ├─ Capture stdout/stderr and store execution record
    ├─ Log output
    └─ Complete
 
@@ -459,7 +468,7 @@ curl http://localhost:8000/api/v1/deploy/history | jq '
 
 ### SSH Keys
 
-Required for Python SSH connectivity:
+Required for Ansible to connect to the target VMs:
 ```bash
 ssh-keygen -t rsa -b 4096
 ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.129

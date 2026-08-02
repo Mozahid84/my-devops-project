@@ -1,12 +1,22 @@
 MSSQL Build role
 ================
 
-This role provides a minimal, safe skeleton for building a SQL Server host in
-the lab. It contains idempotent directory and user creation tasks and a
-placeholder where platform-specific package installation should be added.
+This role performs a full, idempotent SQL Server 2019 install on
+CentOS/RHEL 8-based hosts: it creates the backup/data/log directories and the
+`mssql` service account, installs required OS dependencies, adds the
+Microsoft SQL Server and MSSQL-Tools yum repositories, installs
+`mssql-server`/`mssql-tools`, runs `mssql-conf setup`, applies a lab memory
+limit, starts the service, waits for it to listen on `mssql_port`, and
+verifies the install with `sqlcmd -Q "SELECT @@VERSION"`.
+
+Key variables (see `defaults/main.yml`): `mssql_version`, `mssql_edition`,
+`mssql_service_user`, `sa_password`, `backup_dir`, `data_dir`, `log_dir`,
+`mssql_port`, `mssql_tools_path`, `mssql_memory_limit_mb`.
 
 Usage:
 
-- Include role in `playbooks/build.yml` for an idempotent prepare+install flow.
-- Replace the placeholder task with real package installation steps for your
-  target OS (yum/apt/dnf) or call out to a more detailed role.
+- Included by `playbooks/build.yml` as the sole role in an idempotent
+  prepare+install flow, invoked via the FastAPI service's `build` deploy
+  endpoint (see `app/deployer.py`).
+- Override `sa_password` and other defaults via `-e` or a vars file rather
+  than editing `defaults/main.yml` directly.

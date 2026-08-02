@@ -18,8 +18,8 @@ From Git Bash:
 ```bash
 ping -c 2 192.168.70.129
 ping -c 2 192.168.70.130
-ssh root@192.168.70.129 'hostname'
-ssh root@192.168.70.130 'hostname'
+ssh devops@192.168.70.129 'hostname'
+ssh devops@192.168.70.130 'hostname'
 ```
 
 If names are needed, add them to `/etc/hosts` on the VMs or your workstation host file.
@@ -59,9 +59,9 @@ Edit `.env` and set at least:
 MSSQL_SA_PASSWORD=YourStr0ng!Passw0rd
 VM1_HOST=192.168.70.129
 VM2_HOST=192.168.70.130
-VM1_USER=root
-VM2_USER=root
-SSH_KEY_PATH=~/.ssh/id_ed25519
+VM1_USER=devops
+VM2_USER=devops
+SSH_KEY_PATH=~/.ssh/id_rsa
 ANSIBLE_INVENTORY=./ansible/inventory/hosts.ini
 ANSIBLE_PLAYBOOK_DIR=./ansible/playbooks
 ANSIBLE_CMD=ansible-playbook
