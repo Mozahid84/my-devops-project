@@ -138,11 +138,16 @@ This update converts the `python-fastapi-mssql` project from native SSH-based MS
 2. Add unit tests or mocks for `AnsibleRunner`
 3. Remove the unused `app/python_deployer.py` and the now-dead `paramiko`
    dependency, or otherwise decide their fate (currently unimported dead code)
-4. Reconcile the SSH user/key path shown in `RUNBOOK.md`/`.env.example`
-   (`root@`, `id_ed25519`) with `ansible/inventory/hosts.ini`
-   (`ansible_user=devops`, `id_rsa`)
-5. Consider an AG listener and/or a real cluster manager (Pacemaker) if
+4. Consider an AG listener and/or a real cluster manager (Pacemaker) if
    automatic failover is ever needed -- current setup is manual-failover only
-6. `mssql_build` role's directory-creation tasks have the same
+5. `mssql_build` role's directory-creation tasks have the same
    root-ownership issue that was fixed in the `mssql` role's `configure.yml`
    -- not yet fixed since `build.yml` wasn't exercised this session
+
+~~Reconcile the SSH user/key path shown in `RUNBOOK.md`/`.env.example`~~ --
+done: all `root@`/`id_ed25519` references in `README.md`/`RUNBOOK.md` now
+match `ansible/inventory/hosts.ini`'s `ansible_user=devops`/`id_rsa`. Also
+documented that VM1 doubles as the Ansible controller in this lab (see
+`RUNBOOK.md` section 9 and `README.md`'s Access Logs), and added
+`ansible.cfg` with `log_path` so `logs/ansible.log` now persists full
+Ansible run output independent of the API process's lifetime.

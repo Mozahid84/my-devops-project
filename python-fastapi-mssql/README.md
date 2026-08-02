@@ -452,8 +452,22 @@ Long-running deployments run in background tasks:
 
 ### Access Logs
 
+Note: in the VMware lab setup, VM1 (192.168.70.129) is both a deployment
+target *and* the machine this API/Ansible actually runs on -- so these are
+local paths on VM1, not something you need to SSH for. VM2 is the only
+genuinely remote host; see [RUNBOOK.md](RUNBOOK.md#9-checking-logs) for its
+log paths.
+
 ```bash
+# FastAPI app log -- request events and tracebacks only, not Ansible output
 tail -f logs/app.log
+
+# Full ansible-playbook output (stdout/stderr) for every run, persisted
+# regardless of API process restarts -- set via ansible.cfg's log_path
+tail -f logs/ansible.log
+
+# SQL Server's own error log -- HADR/AG/certificate errors show up here
+sudo tail -100 /var/opt/mssql/log/errorlog
 ```
 
 ### Deployment Metrics
@@ -468,11 +482,12 @@ curl http://localhost:8000/api/v1/deploy/history | jq '
 
 ### SSH Keys
 
-Required for Ansible to connect to the target VMs:
+Required for Ansible to connect to the target VMs (matches
+`ansible_user=devops` in `ansible/inventory/hosts.ini`):
 ```bash
 ssh-keygen -t rsa -b 4096
-ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.129
-ssh-copy-id -i ~/.ssh/id_rsa root@192.168.70.130
+ssh-copy-id -i ~/.ssh/id_rsa devops@192.168.70.129
+ssh-copy-id -i ~/.ssh/id_rsa devops@192.168.70.130
 ```
 
 Mount in Docker:
@@ -515,7 +530,7 @@ pip install -r requirements.txt
 
 ```bash
 # Test SSH connectivity
-ssh -i ~/.ssh/id_rsa root@192.168.70.129
+ssh -i ~/.ssh/id_rsa devops@192.168.70.129
 
 # Verify keys are mounted in Docker
 docker exec mssql-api ls -la /root/.ssh/
@@ -533,6 +548,11 @@ mkdir -p logs
 # Check permissions
 chmod 755 logs
 ```
+
+If `logs/ansible.log` is missing or empty, check that `ansible.cfg` exists
+in the project root and its `log_path` resolves relative to wherever
+`uvicorn` was started from (its working directory, not the `ansible/`
+subdirectory).
 
 ## Support
 
