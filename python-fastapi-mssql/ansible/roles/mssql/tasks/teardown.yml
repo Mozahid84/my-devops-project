@@ -1,0 +1,136 @@
+---
+# Reverse alwayson.yml + backup.yml + restore.yml + adventureworks.yml.
+# Leaves MSSQL installed and configured; safe to re-run.
+
+- name: Check whether Availability Group exists
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.availability_groups WHERE name = '{{ ag_name }}'"
+  register: ag_exists_check
+  changed_when: false
+  failed_when: false
+  tags:
+    - teardown
+
+- name: Drop Availability Group (removes this replica from the AG)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "DROP AVAILABILITY GROUP [{{ ag_name }}]"
+  when: (ag_exists_check.stdout | trim) == '1'
+  changed_when: true
+  tags:
+    - teardown
+
+- name: Take AdventureWorks out of HADR if still flagged (safety net)
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.databases WHERE name = 'AdventureWorks' AND is_hadr_enabled = 1)
+    ALTER DATABASE AdventureWorks SET HADR OFF
+    "
+  changed_when: false
+  failed_when: false
+  tags:
+    - teardown
+
+- name: Drop AdventureWorks database
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.databases WHERE name = 'AdventureWorks')
+    BEGIN
+      ALTER DATABASE AdventureWorks SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+      DROP DATABASE AdventureWorks;
+    END
+    "
+  changed_when: true
+  tags:
+    - teardown
+
+- name: Drop Always On endpoint
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.database_mirroring_endpoints WHERE name = '{{ ag_endpoint_name }}')
+    DROP ENDPOINT [{{ ag_endpoint_name }}]
+    "
+  changed_when: true
+  tags:
+    - teardown
+
+- name: Drop AG certificate
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.certificates WHERE name = '{{ ag_cert_name }}')
+    DROP CERTIFICATE {{ ag_cert_name }}
+    "
+  changed_when: true
+  tags:
+    - teardown
+
+- name: Drop database master key
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
+    IF EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##')
+    DROP MASTER KEY
+    "
+  changed_when: false
+  failed_when: false
+  tags:
+    - teardown
+
+- name: Remove AG certificate files from data_dir
+  file:
+    path: "{{ data_dir }}/{{ ag_cert_name }}.{{ item }}"
+    state: absent
+  loop:
+    - cer
+    - pvk
+  tags:
+    - teardown
+
+- name: Remove striped backup files
+  file:
+    path: "{{ backup_dir }}/striped"
+    state: absent
+  tags:
+    - teardown
+
+- name: Remove AG seed backups
+  file:
+    path: "{{ backup_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - aw_full_seed.bak
+    - aw_log_seed.bak
+  tags:
+    - teardown
+
+- name: Remove downloaded AdventureWorks source backup
+  file:
+    path: "{{ data_dir }}/AdventureWorks2019.bak"
+    state: absent
+  tags:
+    - teardown
+
+- name: Remove deployment summary file
+  file:
+    path: "/tmp/mssql_deployment_{{ inventory_hostname }}.txt"
+    state: absent
+  tags:
+    - teardown
+
+- name: Clear controller-side backup relay directory (vm1 only, runs once)
+  file:
+    path: "{{ local_backup_dir }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == "vm1"
+  tags:
+    - teardown
+
+- name: Clear controller-side certificate relay directory (vm1 only, runs once)
+  file:
+    path: "{{ local_cert_relay_dir }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == "vm1"
+  tags:
+    - teardown

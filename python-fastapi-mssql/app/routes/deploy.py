@@ -298,3 +298,81 @@ async def ping_hosts():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to ping hosts: {str(e)}"
         )
+
+@router.post("/teardown")
+async def deploy_teardown(background_tasks: BackgroundTasks):
+    """Tear down the Always On AG, AdventureWorks, and backup artifacts.
+
+    Leaves MSSQL installed and configured. Safe to re-run.
+    """
+    logger.info("Received deployment request - Teardown")
+    try:
+        task_id = deployer.start_task("teardown")
+        background_tasks.add_task(deployer.deploy_teardown, task_id)
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "Teardown started",
+            "engine": "ansible",
+            "playbook": "teardown.yml",
+            "estimated_duration_minutes": 5,
+        }
+    except Exception as e:
+        logger.error(f"Error initiating teardown: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to initiate teardown: {str(e)}")
+
+
+@router.post("/rewind")
+async def deploy_rewind(background_tasks: BackgroundTasks):
+    """Tear down AG/AdventureWorks/backups, then restore a fresh AdventureWorks on vm1.
+
+    Leaves the lab ready to retry backup/restore/alwayson from a clean baseline.
+    """
+    logger.info("Received deployment request - Rewind")
+    try:
+        task_id = deployer.start_task("rewind")
+        background_tasks.add_task(deployer.deploy_rewind, task_id)
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "Rewind started",
+            "engine": "ansible",
+            "playbooks": ["teardown.yml", "site.yml"],
+            "estimated_duration_minutes": 15,
+        }
+    except Exception as e:
+        logger.error(f"Error initiating rewind: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to initiate rewind: {str(e)}")
+
+
+@router.post("/reset-baseline")
+async def deploy_reset_baseline(background_tasks: BackgroundTasks):
+    """Uninstall MSSQL entirely and return both hosts to a bare VM.
+
+    Does not reinstall -- call POST /api/v1/deploy/install afterward to rebuild.
+    """
+    logger.info("Received deployment request - Reset baseline")
+    try:
+        task_id = deployer.start_task("reset-baseline")
+        background_tasks.add_task(deployer.deploy_reset_baseline, task_id)
+        return {
+            "status": "initiated",
+            "task_id": task_id,
+            "message": "Reset to bare-VM baseline started",
+            "engine": "ansible",
+            "playbook": "uninstall.yml",
+            "estimated_duration_minutes": 5,
+        }
+    except Exception as e:
+        logger.error(f"Error initiating reset-baseline: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to initiate reset-baseline: {str(e)}")
+
+
+@router.get("/rewind-plan")
+async def get_rewind_plan():
+    """Return the step-by-step plan for teardown/rewind/reset-baseline without executing anything."""
+    try:
+        return deployer.get_rewind_plan()
+    except Exception as e:
+        logger.error(f"Error retrieving rewind plan: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve rewind plan: {str(e)}")

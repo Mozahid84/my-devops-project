@@ -1,0 +1,13 @@
+---
+- name: Remove MSSQL entirely and return host to a bare VM
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Run uninstall tasks
+      include_role:
+        name: mssql
+        tasks_from: uninstall.yml
+      tags:
+        - uninstall

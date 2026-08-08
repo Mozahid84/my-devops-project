@@ -1,5 +1,46 @@
 # FastAPI MSSQL Ansible Integration Change Log
 
+## Teardown, Rewind, and Reset-Baseline
+Added a reverse path to complement the forward `install`/`backup`/`alwayson`/
+`full-ag` flow, so the lab can be reset without SSHing in by hand: `POST
+/api/v1/deploy/teardown`, `/rewind`, `/reset-baseline`, and `GET
+/api/v1/deploy/rewind-plan`. Design and full code walkthrough in
+`docs/guides/mssql-rewind-and-teardown-implementation.md`.
+
+- `roles/mssql/tasks/teardown.yml` + `playbooks/teardown.yml`: drops the
+  Availability Group independently on both replicas (`CLUSTER_TYPE=NONE` has
+  no shared cluster state, so each node needs its own `DROP AVAILABILITY
+  GROUP`), takes `AdventureWorks` out of HADR as a safety net, drops the
+  database, drops the Always On endpoint/certificate/master key, removes the
+  AG certificate files/striped backups/seed backups/downloaded
+  `AdventureWorks2019.bak`, and clears the controller-side backup/cert relay
+  directories. Every step is `IF EXISTS`/`state: absent`, so it's safe to
+  call repeatedly or on a host with nothing to tear down. Leaves MSSQL
+  installed and configured.
+- `roles/mssql/tasks/uninstall.yml` + `playbooks/uninstall.yml`: deep wipe --
+  stops `mssql-server`, removes the `mssql-server`/`mssql-tools` packages and
+  their yum repos, deletes `/var/opt/mssql`, `data_dir`, `log_dir`,
+  `backup_dir`, and clears the controller-side relay directories. Automates
+  what `RUNBOOK.md` section 7 previously documented as manual SSH steps.
+- `deployer.py`: added `deploy_teardown`, `deploy_reset_baseline`,
+  `deploy_rewind` (chains `teardown.yml` then `site.yml -l vm1`, reusing the
+  `SequenceStepError` pattern from `_run_full_ag_sequence` so a failed
+  teardown stops the sequence instead of continuing into a reinstall), and
+  `get_rewind_plan` (a static description of what each destructive playbook
+  does -- not a live check-mode run, since these are `shell`/`sqlcmd` tasks
+  Ansible `--check` can't safely simulate).
+- Added `test_rewind_plan_endpoint` (GET-only, no side effects) and
+  `test_deploy_rewind_sequence_stops_on_teardown_failure` (monkeypatches
+  `AnsibleRunner.run_playbook` so it never shells out for real -- the
+  existing suite deliberately never calls the other `POST` endpoints
+  directly either, since Starlette's `TestClient` runs `BackgroundTasks`
+  synchronously inside the request).
+- Implemented and syntax-checked; not yet live-tested end-to-end against the
+  lab VMs this session (no `teardown`/`uninstall` runs in `logs/ansible.log`
+  yet). Next real verification step: `reset-baseline` -> `full-ag` from a
+  bare VM and confirm it reaches `SYNCHRONIZED`/`HEALTHY` with no manual
+  intervention, the same discipline used to verify the AG build below.
+
 ## Working Always On Availability Group (vm1 primary, vm2 secondary)
 Completed and live-tested the full `full-ag` workflow end to end against the
 lab VMs: download AdventureWorks -> restore on vm1 -> 10-stripe backup ->

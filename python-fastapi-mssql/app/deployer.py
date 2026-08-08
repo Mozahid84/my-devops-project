@@ -120,6 +120,74 @@ class AnsibleMssqlDeployer:
     def deploy_build(self, task_id: str) -> None:
         """Run the MSSQL build playbook which prepares hosts and runs the mssql_build role."""
         self._run_task(task_id, lambda: self.ansible.run_playbook("build.yml", extra_vars=self._build_extra_vars()))
+    
+    def deploy_teardown(self, task_id: str) -> None:
+        self._run_task(task_id, lambda: self.ansible.run_playbook("teardown.yml", extra_vars=self._build_extra_vars()))
+
+    def deploy_reset_baseline(self, task_id: str) -> None:
+        self._run_task(task_id, lambda: self.ansible.run_playbook("uninstall.yml", extra_vars=self._build_extra_vars()))
+
+    def deploy_rewind(self, task_id: str) -> None:
+        self._run_task(task_id, self._run_rewind_sequence)
+
+    def _run_rewind_sequence(self) -> Dict[str, object]:
+        results: Dict[str, object] = {}
+        results["teardown"] = self.ansible.run_playbook("teardown.yml", extra_vars=self._build_extra_vars())
+        if not results["teardown"]["success"]:
+            raise SequenceStepError("teardown step failed; see results.teardown for details", results)
+
+        results["reinstall_vm1"] = self.ansible.run_playbook(
+            "site.yml",
+            limit="vm1",
+            extra_vars=self._build_extra_vars(),
+        )
+        if not results["reinstall_vm1"]["success"]:
+            raise SequenceStepError("reinstall_vm1 step failed; see results.reinstall_vm1 for details", results)
+
+        return results
+
+    def get_rewind_plan(self) -> Dict[str, object]:
+        """Static description of each destructive playbook -- not a live dry-run,
+        since these are shell/sqlcmd tasks that Ansible --check can't safely simulate."""
+        return {
+            "note": "Describes what each playbook does; not a live check-mode run.",
+            "teardown": {
+                "playbook": "teardown.yml",
+                "endpoint": "POST /api/v1/deploy/teardown",
+                "leaves_mssql_installed": True,
+                "steps": [
+                    "Drop the Availability Group on both replicas (independently, CLUSTER_TYPE=NONE)",
+                    "Take AdventureWorks out of HADR if still flagged",
+                    "Drop the AdventureWorks database on both replicas",
+                    "Drop the Always On endpoint and AG certificate on both replicas",
+                    "Drop the database master key",
+                    "Remove AG certificate files, striped backups, seed backups, and the downloaded AdventureWorks2019.bak",
+                    "Clear the controller-side backup/cert relay directories",
+                ],
+            },
+            "rewind": {
+                "playbooks": ["teardown.yml", "site.yml (limit vm1)"],
+                "endpoint": "POST /api/v1/deploy/rewind",
+                "leaves_mssql_installed": True,
+                "steps": [
+                    "Everything in teardown, then",
+                    "Re-run site.yml against vm1 only: reconfirm config and restore a fresh AdventureWorks",
+                    "Leaves vm1 with a clean AdventureWorks and no AG -- ready to retry backup/restore/alwayson",
+                ],
+            },
+            "reset-baseline": {
+                "playbook": "uninstall.yml",
+                "endpoint": "POST /api/v1/deploy/reset-baseline",
+                "leaves_mssql_installed": False,
+                "steps": [
+                    "Stop mssql-server",
+                    "Remove mssql-server and mssql-tools packages and their yum repos",
+                    "Delete /var/opt/mssql, data_dir, log_dir, backup_dir",
+                    "Clear controller-side relay directories",
+                    "Host returns to a bare VM -- call POST /api/v1/deploy/install to rebuild",
+                ],
+            },
+        }
 
     def get_hosts(self) -> Dict:
         return {

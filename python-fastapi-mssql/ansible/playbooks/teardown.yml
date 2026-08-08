@@ -1,0 +1,43 @@
+---
+- name: Tear down Always On AG, AdventureWorks, and backup artifacts
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Check MSSQL connectivity before teardown
+      shell: |
+        {{ mssql_tools_path | default('/opt/mssql-tools/bin') }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "SELECT 1"
+      register: connectivity_check
+      retries: 5
+      delay: 5
+      until: connectivity_check.rc == 0
+      changed_when: false
+      failed_when: false
+      tags:
+        - teardown
+
+  tasks:
+    - name: Run teardown tasks
+      include_role:
+        name: mssql
+        tasks_from: teardown.yml
+      when: connectivity_check.rc == 0
+      tags:
+        - teardown
+The connectivity gate makes it safe to call /deploy/teardown on a host where MSSQL isn't even running (e.g. already torn down) — it skips instead of erroring.
+
+4. New: python-fastapi-mssql/ansible/playbooks/uninstall.yml
+---
+- name: Remove MSSQL entirely and return host to a bare VM
+  hosts: mssql_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Run uninstall tasks
+      include_role:
+        name: mssql
+        tasks_from: uninstall.yml
+      tags:
+        - uninstall

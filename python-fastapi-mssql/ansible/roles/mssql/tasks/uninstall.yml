@@ -1,0 +1,102 @@
+---
+# Deep wipe: removes MSSQL entirely, returning the host to a bare VM.
+# Run teardown.yml first if an AG/database might still exist -- this file does
+# not attempt AG-aware cleanup, it just stops the service and deletes everything.
+
+- name: Stop MSSQL service
+  systemd:
+    name: mssql-server
+    state: stopped
+  failed_when: false
+  tags:
+    - uninstall
+
+- name: Remove MSSQL Server package
+  yum:
+    name: mssql-server
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove MSSQL Tools package
+  yum:
+    name: mssql-tools
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove Microsoft SQL Server repo definition
+  yum_repository:
+    name: mssql-server
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove Microsoft MSSQL-Tools repo definition
+  yum_repository:
+    name: mssql-tools
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove MSSQL config/state directory
+  file:
+    path: /var/opt/mssql
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove data directory
+  file:
+    path: "{{ data_dir }}"
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove log directory
+  file:
+    path: "{{ log_dir }}"
+    state: absent
+  tags:
+    - uninstall
+
+- name: Remove backup directory
+  file:
+    path: "{{ backup_dir }}"
+    state: absent
+  tags:
+    - uninstall
+
+- name: Reset any failed systemd unit state
+  command: systemctl reset-failed mssql-server
+  failed_when: false
+  changed_when: false
+  tags:
+    - uninstall
+
+- name: Remove deployment summary file
+  file:
+    path: "/tmp/mssql_deployment_{{ inventory_hostname }}.txt"
+    state: absent
+  tags:
+    - uninstall
+
+- name: Clear controller-side backup relay directory (vm1 only, runs once)
+  file:
+    path: "{{ local_backup_dir }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == "vm1"
+  tags:
+    - uninstall
+
+- name: Clear controller-side certificate relay directory (vm1 only, runs once)
+  file:
+    path: "{{ local_cert_relay_dir }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == "vm1"
+  tags:
+    - uninstall

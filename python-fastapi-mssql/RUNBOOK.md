@@ -123,6 +123,40 @@ curl http://localhost:8000/api/v1/deploy/status
 ## 7. Reset and Start Over for Testing
 Use this when you want to tear down and replay the lab from scratch.
 
+### Automated (preferred)
+Three levels, from least to most destructive -- see
+`docs/guides/mssql-rewind-and-teardown-implementation.md` for the full design
+and what each one does under the hood.
+
+```bash
+# Drop the AG, AdventureWorks, and backup artifacts. Leaves MSSQL installed
+# and configured -- ready to re-run backup/alwayson/full-ag. Safe to re-run.
+curl -X POST http://localhost:8000/api/v1/deploy/teardown
+
+# Teardown, then restore a fresh AdventureWorks on vm1 only. Leaves the lab
+# ready to retry backup/restore/alwayson from a clean baseline.
+curl -X POST http://localhost:8000/api/v1/deploy/rewind
+
+# Full uninstall: stops mssql-server, removes the packages/repos, deletes
+# /var/opt/mssql and the data/log/backup directories. Returns both VMs to a
+# bare state -- does NOT reinstall. Follow with POST /deploy/install or
+# /deploy/full-ag to rebuild.
+curl -X POST http://localhost:8000/api/v1/deploy/reset-baseline
+```
+
+Watch progress the same way as any other deployment call:
+```bash
+tail -f logs/ansible.log
+curl http://localhost:8000/api/v1/deploy/history | jq '.executions[0]'
+```
+
+`GET /api/v1/deploy/rewind-plan` returns a static description of what each of
+the three does, without running anything -- useful before you run one for
+the first time.
+
+### Manual fallback
+If the API isn't running, or you want to reset without going through it:
+
 ### Stop the API
 Press `Ctrl+C` in the terminal running Uvicorn.
 
