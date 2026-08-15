@@ -2220,18 +2220,18 @@ conflicts with an existing AG). The one exception: `dataguard_broker.yml`'s
 `CREATE CONFIGURATION` is also gated (on `ORA-16532`), so a rerun there is
 safe too.
 
-There's no teardown/rewind/reset-baseline playbook for this build yet —
-tearing down an Oracle Data Guard pair cleanly (disable broker, stop
-recovery, drop the standby, `DBCA -deleteDatabase`, deinstall software) is
-enough of its own topic that it belongs in a dedicated follow-up guide, the
-same way
+Tearing down an Oracle Data Guard pair cleanly (remove the broker
+configuration, stop recovery, drop the standby, `dbca -deleteDatabase`,
+deinstall software) is its own topic — covered in
+[`oracle-rewind-and-teardown-implementation.md`](oracle-rewind-and-teardown-implementation.md),
+the same way
 [`mssql-rewind-and-teardown-implementation.md`](mssql-rewind-and-teardown-implementation.md)
-came after the MSSQL AG build guide rather than as part of it. Until that
-exists, the only clean-slate option is deinstalling by hand:
+followed the MSSQL AG build guide rather than being part of it. That doc
+adds `POST /deploy/teardown`, `/rewind`, and `/reset-baseline` — once
+they're in place, the clean-rerun sequence is:
 ```bash
-# on each VM, as the oracle user
-dbca -silent -deleteDatabase -sourceDB orcl
-$ORACLE_HOME/deinstall/deinstall
+curl -X POST http://localhost:8001/api/v1/deploy/reset-baseline   # wipe both VMs
+curl -X POST http://localhost:8001/api/v1/deploy/full-dg           # rebuild from bare
 ```
 
 ---
