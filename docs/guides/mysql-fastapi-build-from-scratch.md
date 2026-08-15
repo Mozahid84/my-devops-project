@@ -1603,12 +1603,18 @@ will simply fail until they're stopped first. Unlike the Oracle build (whose
 much closer to the MSSQL build's `full-ag`: safe on a bare pair, destructive
 on a healthy one.
 
-There's no teardown/rewind/reset-baseline playbook for this build yet —
-tearing down MySQL replication cleanly (stop replica threads, reset
+Tearing down MySQL replication cleanly (stop replica threads, reset
 `gtid_purged`, drop the replication user, remove the datadir, uninstall the
-packages) is its own topic, the same way the MSSQL and Oracle build guides
-were each followed by a dedicated teardown/rewind guide rather than
-including one inline.
+packages) is covered in
+[`mysql-rewind-and-teardown-implementation.md`](mysql-rewind-and-teardown-implementation.md),
+the same way the MSSQL and Oracle build guides were each followed by a
+dedicated teardown/rewind guide rather than including one inline. That doc
+adds `POST /deploy/teardown`, `/rewind`, and `/reset-baseline` — once
+they're in place, the clean-rerun sequence is:
+```bash
+curl -X POST http://localhost:8002/api/v1/deploy/reset-baseline   # wipe both VMs
+curl -X POST http://localhost:8002/api/v1/deploy/full-repl         # rebuild from bare
+```
 
 ---
 
