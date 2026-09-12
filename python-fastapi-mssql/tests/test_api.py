@@ -80,4 +80,27 @@ def test_deploy_rewind_sequence_stops_on_teardown_failure(monkeypatch):
     except SequenceStepError:
         pass
 
-    assert calls == ["teardown.yml"]    
+    assert calls == ["teardown.yml"]
+
+
+def test_deploy_reset_baseline_sequence_stops_on_teardown_failure(monkeypatch):
+    """reset-baseline must not attempt uninstall if teardown itself fails --
+    same shape as the rewind test above."""
+    from app.deployer import AnsibleMssqlDeployer, SequenceStepError
+
+    deployer = AnsibleMssqlDeployer()
+    calls = []
+
+    def fake_run_playbook(playbook_name, tags=None, limit=None, extra_vars=None, skip_tags=None):
+        calls.append(playbook_name)
+        return {"success": False, "playbook": playbook_name, "stdout": "", "stderr": "boom"}
+
+    monkeypatch.setattr(deployer.ansible, "run_playbook", fake_run_playbook)
+
+    try:
+        deployer._run_reset_baseline_sequence()
+        assert False, "expected SequenceStepError"
+    except SequenceStepError:
+        pass
+
+    assert calls == ["teardown.yml"]

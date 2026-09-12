@@ -3,6 +3,21 @@
   hosts: mssql_servers
   become: yes
   gather_facts: yes
+  # Without `serial: 1`, Ansible runs "Drop Availability Group" on vm1 and
+  # vm2 in the same task step -- both replicas dropping the AG at once, an
+  # untested combination of concurrent AG mutations. `serial: 1` forces one
+  # host to finish the entire task file before the next starts.
+  #
+  # NOT fully resolved by this: with `serial: 1` and no explicit `order:`,
+  # hosts are processed in inventory order -- vm1 before vm2 in hosts.ini,
+  # which is *not* the same as "secondary before primary" (whichever
+  # replica is PRIMARY varies after failovers). `DROP AVAILABILITY GROUP`
+  # has only ever been tested live against a SECONDARY. If you want to
+  # control the order for a real run, invoke this playbook directly with
+  # an explicit `--limit <secondary>,<primary>` (checked via ag-status
+  # first) instead of calling it through the API, which always targets
+  # mssql_servers with no ordering control.
+  serial: 1
 
   pre_tasks:
     - name: Check MSSQL connectivity before teardown

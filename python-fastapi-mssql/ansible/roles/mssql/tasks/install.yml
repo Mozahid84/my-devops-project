@@ -65,8 +65,16 @@
     - tools
 
 - name: Check whether MSSQL has already been configured
+  # Check the master data file, not mssql.conf: the mssql-server RPM's own
+  # postinstall scriptlet runs `mssql-conf welcome engine` on a genuinely
+  # fresh install (whenever no master data file exists yet), which creates
+  # mssql.conf as a side effect WITHOUT accepting the EULA or setting the
+  # SA password. Checking mssql.conf's existence wrongly concluded setup
+  # had already run and skipped it, leaving sqlservr refusing to start
+  # with "EULA must be accepted". Checking master.mdf mirrors exactly what
+  # the RPM's own scriptlet checks before deciding to run `welcome engine`.
   stat:
-    path: /var/opt/mssql/mssql.conf
+    path: "{{ data_dir }}/master.mdf"
   register: mssql_config
   tags:
     - install

@@ -30,15 +30,22 @@
   tags:
     - teardown
 
+- name: Check whether AdventureWorks exists
+  shell: |
+    {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name = 'AdventureWorks'"
+  register: aw_exists_check
+  changed_when: false
+  failed_when: false
+  tags:
+    - teardown
+
 - name: Drop AdventureWorks database
   shell: |
     {{ mssql_tools_path }}/sqlcmd -S localhost -U SA -P "{{ sa_password }}" -Q "
-    IF EXISTS (SELECT * FROM sys.databases WHERE name = 'AdventureWorks')
-    BEGIN
-      ALTER DATABASE AdventureWorks SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-      DROP DATABASE AdventureWorks;
-    END
+    ALTER DATABASE AdventureWorks SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE AdventureWorks;
     "
+  when: (aw_exists_check.stdout | trim) == '1'
   changed_when: true
   tags:
     - teardown

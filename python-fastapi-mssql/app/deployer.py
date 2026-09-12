@@ -26,7 +26,7 @@ class SequenceStepError(RuntimeError):
 class AnsibleMssqlDeployer:
     """Deploy MSSQL using Ansible playbooks."""
 
-    AG_MUTATING_OPERATIONS = ("failover", "sync-rebuild", "alwayson", "full-ag")
+    AG_MUTATING_OPERATIONS = ("failover", "sync-rebuild", "alwayson", "full-ag", "teardown", "rewind", "reset-baseline")
 
     def __init__(self) -> None:
         self.ansible = AnsibleRunner()
@@ -53,10 +53,17 @@ class AnsibleMssqlDeployer:
             return list(self._history)
 
     def ag_operation_in_progress(self) -> Optional[str]:
-        """Operation name of a running AG-mutating task, or None if the AG is free to touch."""
+        """Operation name of a queued-or-running AG-mutating task, or None if the AG is free to touch.
+
+        Checks "queued" as well as "running": start_task() records "queued"
+        synchronously, but status doesn't flip to "running" until the
+        background task actually starts (after the HTTP response is sent
+        and the ansible-playbook subprocess is spawned) -- a real window
+        where a second request could otherwise slip past this check.
+        """
         with self._lock:
             for task in self._history:
-                if task["status"] == "running" and task["operation"].startswith(self.AG_MUTATING_OPERATIONS):
+                if task["status"] in ("queued", "running") and task["operation"].startswith(self.AG_MUTATING_OPERATIONS):
                     return task["operation"]
         return None
 
@@ -135,7 +142,19 @@ class AnsibleMssqlDeployer:
         self._run_task(task_id, lambda: self.ansible.run_playbook("teardown.yml", extra_vars=self._build_extra_vars()))
 
     def deploy_reset_baseline(self, task_id: str) -> None:
-        self._run_task(task_id, lambda: self.ansible.run_playbook("uninstall.yml", extra_vars=self._build_extra_vars()))
+        self._run_task(task_id, self._run_reset_baseline_sequence)
+
+    def _run_reset_baseline_sequence(self) -> Dict[str, object]:
+        results: Dict[str, object] = {}
+        results["teardown"] = self.ansible.run_playbook("teardown.yml", extra_vars=self._build_extra_vars())
+        if not results["teardown"]["success"]:
+            raise SequenceStepError("teardown step failed; see results.teardown for details", results)
+
+        results["uninstall"] = self.ansible.run_playbook("uninstall.yml", extra_vars=self._build_extra_vars())
+        if not results["uninstall"]["success"]:
+            raise SequenceStepError("uninstall step failed; see results.uninstall for details", results)
+
+        return results
 
     def deploy_rewind(self, task_id: str) -> None:
         self._run_task(task_id, self._run_rewind_sequence)
@@ -186,10 +205,11 @@ class AnsibleMssqlDeployer:
                 ],
             },
             "reset-baseline": {
-                "playbook": "uninstall.yml",
+                "playbooks": ["teardown.yml", "uninstall.yml"],
                 "endpoint": "POST /api/v1/deploy/reset-baseline",
                 "leaves_mssql_installed": False,
                 "steps": [
+                    "Teardown first (safe no-op if already clean): drop the AG, AdventureWorks, and backup artifacts",
                     "Stop mssql-server",
                     "Remove mssql-server and mssql-tools packages and their yum repos",
                     "Delete /var/opt/mssql, data_dir, log_dir, backup_dir",

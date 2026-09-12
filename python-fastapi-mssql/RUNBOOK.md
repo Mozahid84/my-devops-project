@@ -76,7 +76,15 @@ python -m venv venv
 source venv/Scripts/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+ansible-galaxy collection install -r ansible/requirements.yml
 ```
+
+`restore.yml`'s VM1-to-controller backup fetch uses the `synchronize`
+module, which ships in the `ansible.posix` collection, not ansible-core --
+without it, `full-ag`/`backup` fail at playbook-parse time with `ERROR!
+couldn't resolve module/action 'synchronize'`. `rsync` itself must also be
+installed on VM1 and VM2 (not the controller) for `synchronize` to work --
+typically already present on RHEL/CentOS-family hosts.
 
 If you are in Git Bash on Windows, `source venv/Scripts/activate` should work. If not, use:
 
@@ -139,9 +147,21 @@ curl -X POST http://localhost:8000/api/v1/deploy/rewind
 
 # Full uninstall: stops mssql-server, removes the packages/repos, deletes
 # /var/opt/mssql and the data/log/backup directories. Returns both VMs to a
-# bare state -- does NOT reinstall. Follow with POST /deploy/install or
-# /deploy/full-ag to rebuild.
+# bare state -- does NOT reinstall.
 curl -X POST http://localhost:8000/api/v1/deploy/reset-baseline
+```
+
+**After `reset-baseline`, always call `POST /deploy/install` first** (not
+`/full-ag` directly) — `/full-ag` only installs MSSQL on vm1
+(`site.yml -l vm1`), it never touches vm2's install state. Since
+`reset-baseline` wipes both VMs, going straight to `/full-ag` fails once it
+reaches vm2 (`sqlcmd: No such file or directory` -- vm2 has no MSSQL
+installed at all). `/deploy/install` runs `site.yml` unlimited (both
+hosts), which is the actual prerequisite:
+```bash
+curl -X POST http://localhost:8000/api/v1/deploy/install
+# wait for status: success in /deploy/history, then:
+curl -X POST http://localhost:8000/api/v1/deploy/full-ag
 ```
 
 Watch progress the same way as any other deployment call:

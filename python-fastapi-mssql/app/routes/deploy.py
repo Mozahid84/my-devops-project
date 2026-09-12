@@ -321,6 +321,14 @@ async def deploy_teardown(background_tasks: BackgroundTasks):
 
     Leaves MSSQL installed and configured. Safe to re-run.
     """
+    in_progress = deployer.ag_operation_in_progress()
+    if in_progress:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Another AG-mutating operation ('{in_progress}') is already running -- "
+                   f"wait for it to finish before starting a teardown.",
+        )
+
     logger.info("Received deployment request - Teardown")
     try:
         task_id = deployer.start_task("teardown")
@@ -344,6 +352,14 @@ async def deploy_rewind(background_tasks: BackgroundTasks):
 
     Leaves the lab ready to retry backup/restore/alwayson from a clean baseline.
     """
+    in_progress = deployer.ag_operation_in_progress()
+    if in_progress:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Another AG-mutating operation ('{in_progress}') is already running -- "
+                   f"wait for it to finish before starting a rewind.",
+        )
+
     logger.info("Received deployment request - Rewind")
     try:
         task_id = deployer.start_task("rewind")
@@ -367,6 +383,14 @@ async def deploy_reset_baseline(background_tasks: BackgroundTasks):
 
     Does not reinstall -- call POST /api/v1/deploy/install afterward to rebuild.
     """
+    in_progress = deployer.ag_operation_in_progress()
+    if in_progress:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Another AG-mutating operation ('{in_progress}') is already running -- "
+                   f"wait for it to finish before starting a reset-baseline.",
+        )
+
     logger.info("Received deployment request - Reset baseline")
     try:
         task_id = deployer.start_task("reset-baseline")
@@ -376,8 +400,8 @@ async def deploy_reset_baseline(background_tasks: BackgroundTasks):
             "task_id": task_id,
             "message": "Reset to bare-VM baseline started",
             "engine": "ansible",
-            "playbook": "uninstall.yml",
-            "estimated_duration_minutes": 5,
+            "playbooks": ["teardown.yml", "uninstall.yml"],
+            "estimated_duration_minutes": 8,
         }
     except Exception as e:
         logger.error(f"Error initiating reset-baseline: {str(e)}")
